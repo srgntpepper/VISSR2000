@@ -82,7 +82,7 @@ public:
 
 	//Enter device specific routines, in this case for SR2000...
 	void SrClientSocket_Init();
-	void SrClientSocket_Connect();
+	BOOL SrClientSocket_Connect();
 	void SrClientSocket_Disconnect();
 	void SrClientSocket_Lon();
 	void SrClientSocket_Loff();
@@ -95,6 +95,7 @@ public:
 
 	//Helper Functions
 	std::string socketCommunication();
+	void clearDeviceBuffer(SOCKET s);
 	void handleTimeout();
 	void handleError(const char* message);
 	void showMessageBox(const char* message);

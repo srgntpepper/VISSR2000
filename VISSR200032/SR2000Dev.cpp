@@ -152,27 +152,27 @@ BOOL SR2000DEV::init(WORD idc, HWND parent, LPSTR iniWide, LPSTR sectionWide)
 		return false;
 	}
 
-	// Attempt to get MaterialID
-	if (GetPrivateProfileString(sectionWide, "MaterialID", "", materialID, sizeof(materialID), iniWide) <= 0)
-	{
-		strncpy_s(emsg, sizeof(emsg), "Material ID not found", _TRUNCATE);
-	
-		// Show the message box
-		//MessageBoxA(NULL, emsg, "Error", MB_OK | MB_ICONERROR);
+	//// Attempt to get MaterialID
+	//if (GetPrivateProfileString(sectionWide, "MaterialID", "", materialID, sizeof(materialID), iniWide) <= 0)
+	//{
+	//	strncpy_s(emsg, sizeof(emsg), "Material ID not found", _TRUNCATE);
+	//
+	//	// Show the message box
+	//	//MessageBoxA(NULL, emsg, "Error", MB_OK | MB_ICONERROR);
 
-		return false;
-	}
+	//	return false;
+	//}
 
-	// Attempt to get BatchID
-	if (GetPrivateProfileString(sectionWide, "BatchID", "", batchID, sizeof(batchID), iniWide) <= 0)
-	{
-		strncpy_s(emsg, sizeof(emsg), "Batch ID not found", _TRUNCATE);
-		
-		// Show the message box
-		//MessageBoxA(NULL, emsg, "Error", MB_OK | MB_ICONERROR);
+	//// Attempt to get BatchID
+	//if (GetPrivateProfileString(sectionWide, "BatchID", "", batchID, sizeof(batchID), iniWide) <= 0)
+	//{
+	//	strncpy_s(emsg, sizeof(emsg), "Batch ID not found", _TRUNCATE);
+	//	
+	//	// Show the message box
+	//	//MessageBoxA(NULL, emsg, "Error", MB_OK | MB_ICONERROR);
 
-		return false;
-	}
+	//	return false;
+	//}
 
 	// Open and test TCP connection
 	if (!socketsLoaded)
@@ -218,14 +218,14 @@ BOOL SR2000DEV::init(WORD idc, HWND parent, LPSTR iniWide, LPSTR sectionWide)
 
 //This function connects us to the scanner.  It makes a connection
 //and manages the sockets
-void SR2000DEV::SrClientSocket_Connect() {
+BOOL SR2000DEV::SrClientSocket_Connect() {
 
 	//convert Command and Data Port to an int
 	int commandPort = strtol(CommandPort, NULL, 10);
 	int dataPort = strtol(DataPort, NULL, 10);
 	if ((commandPort < 1) || (dataPort < 1)) {
 		strncpy_s(emsg, sizeof(emsg), "Ports Cannot Be Used, Check for Typos...", _TRUNCATE);
-		return;
+		return FALSE;
 	}
 
 	//convert DeviceIP to char* to use in SOCKADDR4
@@ -263,7 +263,7 @@ void SR2000DEV::SrClientSocket_Connect() {
 		strncpy_s(emsg, sizeof(emsg), "Device connection failed", _TRUNCATE);
 		closesocket(s_commandSocket);
 		s_commandSocket = INVALID_SOCKET;
-		return;
+		return FALSE;
 	}
 
 	//if Data and Command Port are not identical, connect to the Data Port
@@ -287,7 +287,7 @@ void SR2000DEV::SrClientSocket_Connect() {
 			strncpy_s(emsg, sizeof(emsg), "Device connection failed when Data Port and Command Port are different", _TRUNCATE);
 			closesocket(s_dataSocket);
 			s_dataSocket = INVALID_SOCKET;
-			return;
+			return FALSE;
 		}
 	}
 	else {
@@ -295,6 +295,7 @@ void SR2000DEV::SrClientSocket_Connect() {
 	}
 	
 	delete[] cDeviceIP; //will delete at the end in case it is needed elsewhere
+	return TRUE;
 }
 
 //This function closes and resets the command and data sockets
@@ -517,35 +518,6 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 	std::string character;
 	int num = 0;
 
-
-	/*This Method was an attempt at using the INIT file to aggregate data, but ended up not being necessary*/
-	/*
-	Open the INIT config file and search for the first occurrence of the
-	material ID and batch ID.  The variable may be referenced differently
-	depending on the user, so the correct name is important.
-	NOTE:This ended up not being necessary - 9/15/23
-	*/
-	//std::string iniPath = findIniPath();
-	
-	// Attempt to get MaterialID Data
-	//if (GetPrivateProfileStringA(section, materialID, "", materialIDData, sizeof(materialIDData), iniPath.c_str()) <= 0)
-	//{
-	//	strncpy_s(emsg, sizeof(emsg), "Material ID Data not found", _TRUNCATE);
-	//	return;
-	//}
-
-	//// Attempt to get BatchID Data
-	//if (GetPrivateProfileStringA(section, batchID, "", batchIDData, sizeof(batchIDData), iniPath.c_str()) <= 0)
-	//{
-	//	strncpy_s(emsg, sizeof(emsg), "Batch ID Data not found", _TRUNCATE);
-	//	return;
-	//}
-
-	/*Conversion only necessary in unicode char set*/
-	/*std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-	std::string materialIDStr = converter.to_bytes(materialIDData);
-	std::string batchIDStr = converter.to_bytes(batchIDData);
-	**********************************************************************************************************/
 	
 	// Check if the file is empty or does not contain column names
 	std::ifstream inFile(filePath);
@@ -775,11 +747,10 @@ void SR2000DEV::SrClientSocket_Inspect() {
 	//if an empty string is returned, return function
 	std::string receivedData = socketCommunication();	//helper function to handle comms with socket
 	if (receivedData.empty()) {
+		SrClientSocket_Loff();
+		Notify(VISN_ERROR);
 		return;
 	}
-
-	//For Debugging
-	//MessageBox(NULL,("receivedData from Inspect = " + receivedData).c_str(), "Inspect", MB_ICONEXCLAMATION | MB_OK);
 
 	//Process the received data for a match
 	SrClientSocket_Compare(receivedData);
@@ -798,6 +769,8 @@ void SR2000DEV::SrClientSocket_Read() {
 	//if an empty string is returned, return function
 	std::string receivedData = socketCommunication();	//helper function to handle comms with socket
 	if (receivedData.empty()) {
+		SrClientSocket_Loff();
+		Notify(VISN_ERROR);
 		return;
 	}
 
@@ -912,13 +885,20 @@ std::string SR2000DEV::socketCommunication() {
 
 		if (activity == SOCKET_ERROR) {
 			handleError("Error getting a response, check the socket.");
+			clearDeviceBuffer(s_commandSocket);  // Clear the buffer
 			return "";
 		}
 
 		//if timeout, handle it
 		if (activity == 0) {
 			handleTimeout();
+			clearDeviceBuffer(s_commandSocket);  // Clear the buffer
 			return "";
+		}
+
+		if (activity == -1) {
+			handleError("Errno: " + errno);
+			clearDeviceBuffer(s_commandSocket); //Clear the buffer
 		}
 
 		//if the socket has data
@@ -927,6 +907,15 @@ std::string SR2000DEV::socketCommunication() {
 			if (bytesRead == SOCKET_ERROR) {
 				//gets the error code from "Windows Socket API"
 				int errorCode = WSAGetLastError();
+
+				responseBuffer[bytesRead] = '\0'; //Null-terminate the received data
+				receivedData.assign(responseBuffer, bytesRead);
+
+				//if an error is received, keep reading from the buffer until it is empty
+				if (receivedData.compare("ERROR") == 0) {
+					clearDeviceBuffer(s_commandSocket);
+				}
+
 				if (errorCode == WSAETIMEDOUT) {
 					handleTimeout();
 					return "";
@@ -941,6 +930,11 @@ std::string SR2000DEV::socketCommunication() {
 			responseBuffer[bytesRead] = '\0'; //Null-terminate the received data
 			receivedData.assign(responseBuffer, bytesRead);
 
+			//if an error is received, keep reading from the buffer until it is empty
+			if (receivedData.compare("ERROR") == 0) {
+				clearDeviceBuffer(s_commandSocket);
+			}
+
 			if (!receivedData.empty() && !std::all_of(receivedData.begin(), receivedData.end(), ::isspace)) {
 				break;	//Non-empty response received, break the loop and handle data
 			}
@@ -949,28 +943,41 @@ std::string SR2000DEV::socketCommunication() {
 	return receivedData;
 }
 
+void SR2000DEV::clearDeviceBuffer(SOCKET s) {
+	char tempBuffer[256]; // Temporary buffer
+	std::string tempData;
+	int recvSize;
+
+	// Optionally set the socket to non-blocking mode here
+
+	while (true) {
+		recvSize = recv(s, tempBuffer, sizeof(tempBuffer), 0);
+
+		tempBuffer[recvSize] = '\0'; //Null-terminate the received data
+		tempData.assign(tempBuffer, recvSize);
+
+		if (tempData.compare("ERROR") == 0) {
+			continue; 
+		}
+		else {
+			break;
+		}
+	}
+}
+
 void SR2000DEV::handleTimeout() {
 	SrClientSocket_Loff();
 	showMessageBox("Timeout waiting for response"); // Refactored message box displaying into a function
-	Notify(VISN_ERROR);
+	//Notify(VISN_ERROR);
 }
 
 void SR2000DEV::handleError(const char* message) {
+	SrClientSocket_Loff();
 	showMessageBox(message);
-	Notify(VISN_ERROR);
+	//Notify(VISN_ERROR);
 }
 
 void SR2000DEV::showMessageBox(const char* message) {
 	// Check if a message box is already displayed
-	if (gMessageBoxDisplayed) {
-		return;
-	}
-	// Set the flag to indicate a message box is displayed
-	gMessageBoxDisplayed = true;
-	// Error Meesage
-	MessageBox(NULL, message, "Error!", MB_ICONEXCLAMATION | MB_OK);
-	// Reset the flag after the message box is closed
-	gMessageBoxDisplayed = false;
-	// Add a delay to prevent consecutive message boxes
-	std::this_thread::sleep_for(std::chrono::milliseconds(200)); //adjust sleep duration as needed
+	OutputDebugString(message);
 }

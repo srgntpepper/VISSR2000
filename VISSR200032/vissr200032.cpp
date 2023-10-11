@@ -226,9 +226,18 @@ extern "C" _declspec (dllexport) BOOL VISOpen(HWND parent, int id, HWND * adwnd)
 	}
 	
 
-	dev.SrClientSocket_Connect();
-	if (DebugMode)
-		OutputDebugString("VISOpen() = TRUE\n");
+	ok = dev.SrClientSocket_Connect();
+
+	if (DebugMode) 
+		{
+		std::string debugStr = "VISOpen() = " + std::string(ok ? "TRUE" : "FAILED") + "\n";
+		OutputDebugString(debugStr.c_str());
+
+		if (!ok) 
+			{
+			return FALSE;
+			}
+		}
 
 	/*
 	std::wstring status = L"VISOpen() Returning true!\n";
