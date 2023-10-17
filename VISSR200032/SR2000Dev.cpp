@@ -547,9 +547,6 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 	if (materialIDIndex != std::string::npos) {
 		materialID = prepstring.substr(materialIDIndex + 6, batchIDIndex - (materialIDIndex + 6));
 		batchID = prepstring.substr(batchIDIndex + 6);
-
-		//For Debugging
-		//MessageBox(NULL, ("materialID from Receive = " + materialID + "\n batchID = " + batchID).c_str(), "Inspect", MB_ICONEXCLAMATION | MB_OK);
 	}
 
 
@@ -776,14 +773,6 @@ void SR2000DEV::SrClientSocket_Read() {
 
 	//If we haven't timed out, Notify that we read
 	Notify(VISN_READ);
-
-	///* For Debugging in VISTEST
-	//// Convert the received data to a wide string (assuming your application is using Unicode)
-	//std::wstring receivedDataWide(receivedData.begin(), receivedData.end());
-
-	//// Display the message received in a message box
-	//MessageBox(NULL, receivedDataWide.c_str(), L"Received Message", MB_ICONINFORMATION | MB_OK);
-	//*/
 }
 
 DWORD WINAPI _LiveLocateProc(LPSTR lpData)
