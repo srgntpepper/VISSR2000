@@ -1,12 +1,12 @@
 #include "stdAfx.h"
 #include "SR2000Dev.h"
-#include "vissr200032.h"
 #include "conversions.h"
 
  
 
 const int RECV_DATA_MAX	= 10240;
 bool gMessageBoxDisplayed = false;
+ 
 
 
 /***************************************************************************
@@ -56,6 +56,8 @@ public:
 	}
 };
 
+
+
 /***************************************************************************
 	Ctor/Dtor
 ***************************************************************************/
@@ -64,6 +66,7 @@ SR2000DEV::SR2000DEV() {
 		socketsLoaded = true;
 	}
 }
+
 
 SR2000DEV::~SR2000DEV() {
 	//upon deletion of object
@@ -81,11 +84,13 @@ SR2000DEV::~SR2000DEV() {
 
 }
 
+
 //Function to initialize sockets to ready state
 void SR2000DEV::SrClientSocket_Init() {
 	s_commandSocket = INVALID_SOCKET;
 	s_dataSocket = INVALID_SOCKET;
 }
+
 
 //sets information needed from .ini file. True if loaded successfully.  
 //One fail condition is if sockets did not load properly
@@ -298,6 +303,7 @@ BOOL SR2000DEV::SrClientSocket_Connect() {
 	return TRUE;
 }
 
+
 //This function closes and resets the command and data sockets
 void SR2000DEV::SrClientSocket_Disconnect() {
 	//close and reset command socket
@@ -315,6 +321,7 @@ void SR2000DEV::SrClientSocket_Disconnect() {
 	WSACleanup();
 }
 
+
 //This function triggers the scanner to set the scan timing on
 void SR2000DEV::SrClientSocket_Lon() {
 
@@ -328,6 +335,7 @@ void SR2000DEV::SrClientSocket_Lon() {
 		strncpy_s(emsg, sizeof(emsg), "Device is disconnected", _TRUNCATE);
 	}
 }
+
 
 //This function turns off the trigger for the scanner
 //should be a manual option for the operator
@@ -344,6 +352,7 @@ void SR2000DEV::SrClientSocket_Loff() {
 	}
 }
 
+
 //This function triggers the scanner to continuously trigger
 void SR2000DEV::SrClientSocket_Test() {
 
@@ -358,6 +367,7 @@ void SR2000DEV::SrClientSocket_Test() {
 	}
 }
 
+
 //This function triggers the scanner to turn off continuous trigger
 void SR2000DEV::SrClientSocket_Quit_Test() {
 
@@ -371,6 +381,7 @@ void SR2000DEV::SrClientSocket_Quit_Test() {
 		strncpy_s(emsg, sizeof(emsg), "Device is disconnected", _TRUNCATE);
 	}
 }
+
 
 /*
 This is a local function used to find the INIT ini file
@@ -399,6 +410,7 @@ std::string findIniPath() {
 
 	return "";
 }
+
 
 //Takes the data received from the scanner and compares it with the prep string
 void SR2000DEV::SrClientSocket_Compare(const std::string& data) {
@@ -452,6 +464,7 @@ void SR2000DEV::SrClientSocket_Compare(const std::string& data) {
 		Notify(VISN_ERROR);
 	}
 }
+
 
 //This function receives and handles the data from the scanner
 void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring) {
@@ -651,6 +664,7 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 	outFile.close();
 }
 
+
 BOOL SR2000DEV::open(WORD idc, HWND parent, LPSTR ini, LPSTR section)
 {
 
@@ -659,6 +673,7 @@ BOOL SR2000DEV::open(WORD idc, HWND parent, LPSTR ini, LPSTR section)
 
 	return isOpen;
 }
+
 
 /****************************************************************************
 	Prep
@@ -753,6 +768,7 @@ void SR2000DEV::SrClientSocket_Inspect() {
 	SrClientSocket_Compare(receivedData);
 }
 
+
 /***************************************************************************
 	SrClientSocket_Inspect()
 
@@ -775,10 +791,12 @@ void SR2000DEV::SrClientSocket_Read() {
 	Notify(VISN_READ);
 }
 
+
 DWORD WINAPI _LiveLocateProc(LPSTR lpData)
 {
 	return ((SR2000DEV*)lpData)->LiveLocateProc();
 }
+
 
 // ok = startLiveLocate()
 // Starts the live locate thread
@@ -800,6 +818,7 @@ BOOL SR2000DEV::startLiveLocate()
 	return true;
 }
 
+
 BOOL SR2000DEV::killLiveLocate()
 {
 	HANDLE h = hLiveLocateThread;
@@ -810,6 +829,7 @@ BOOL SR2000DEV::killLiveLocate()
 	}
 	return true;
 }
+
 
 DWORD SR2000DEV::LiveLocateProc()
 {
@@ -828,7 +848,6 @@ DWORD SR2000DEV::LiveLocateProc()
 }
 
 
-
 void SR2000DEV::getXYPos()
 {
 	// Get current xyz locate point
@@ -843,6 +862,8 @@ void SR2000DEV::getXYPos()
 //	V2 pos = V2(xypos.x, xypos.y)+v;
 //	SendMessage(xywnd, XYM_MOVE, 0, (LPARAM)(LPDOUBLE)&pos.v2);
 //}
+
+
 
 /**********************************************************************************
 	Helper Functions
@@ -932,6 +953,7 @@ std::string SR2000DEV::socketCommunication() {
 	return receivedData;
 }
 
+
 void SR2000DEV::clearDeviceBuffer(SOCKET s) {
 	char tempBuffer[256]; // Temporary buffer
 	std::string tempData;
@@ -954,17 +976,20 @@ void SR2000DEV::clearDeviceBuffer(SOCKET s) {
 	}
 }
 
+
 void SR2000DEV::handleTimeout() {
 	SrClientSocket_Loff();
 	showMessageBox("Timeout waiting for response"); // Refactored message box displaying into a function
 	//Notify(VISN_ERROR);
 }
 
+
 void SR2000DEV::handleError(const char* message) {
 	SrClientSocket_Loff();
 	showMessageBox(message);
 	//Notify(VISN_ERROR);
 }
+
 
 void SR2000DEV::showMessageBox(const char* message) {
 	// Check if a message box is already displayed
