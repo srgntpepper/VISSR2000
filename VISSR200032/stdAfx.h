@@ -70,11 +70,11 @@
 #include <codecvt>
 #include <ShlObj.h>
 
-#include <imslib32.h>
-#include <im5000.h>
-#include <xy32.h>
-#include <vis32.h>
-#include <jvmath32.H>
+#include "imslib32/imslib32.h"
+#include "jvmath32/jvmath32.H"
+#include "im5000/IM5000.H"
+#include "xy32/Xy32.h"
+#include "vis32/VIS32.H"
 
 #include "xvmath.h"
 //#include "CamCal.h"
