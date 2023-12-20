@@ -621,11 +621,11 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 	int grade = min(axial, min(growth_H, growth_V));
 
 	//assign a letter grade
-	if (grade == 5) character = "A";
-	else if (grade == 4) character = "B";
-	else if (grade == 3) character = "C";
-	else if (grade == 2) character = "D";
-	else if (grade == 1) character = "F";
+	if (grade == 4) character = "A";
+	else if (grade == 3) character = "B";
+	else if (grade == 2) character = "C";
+	else if (grade == 1) character = "D";
+	else if (grade == 0) character = "F";
 	else character = "-"; // Using 0 to denote a blank space
 
 	// Get current date and time
