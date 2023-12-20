@@ -2,12 +2,10 @@
 #include "SR2000Dev.h"
 #include "conversions.h"
 
- 
 
 const int RECV_DATA_MAX	= 10240;
 bool gMessageBoxDisplayed = false;
  
-
 
 /***************************************************************************
 	Socket Class for usability with WinSock 
