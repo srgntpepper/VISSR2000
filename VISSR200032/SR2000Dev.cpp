@@ -523,19 +523,47 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 		return;
 	}
 
+	// Check if the file is empty or does not contain column names
+	std::ifstream inFile(filePath);
+	std::string firstLine;
+	std::getline(inFile, firstLine);
 
 	// Parse code
 	std::string materialID;
 	std::string batchID;
 	std::string data;
-	std::string character;
-	int num = 0;
 
-	
-	// Check if the file is empty or does not contain column names
-	std::ifstream inFile(filePath);
-	std::string firstLine;
-	std::getline(inFile, firstLine);
+	// Grading variables
+	std::map<int, int> ISO_15415;
+	std::istringstream iss;
+	std::string token;
+	std::string character;
+
+	// Grading for ISO_16415 standard
+	enum ISO_15415_Grades {
+		OVERALL,
+		DECODE,
+		SYMBOL_CONTRAST,
+		MODULATION,
+		REFLECTANCE_MARGIN,
+		FIXED_PATTERN_DMG,
+		FORMAT_INFO_DMG,
+		VERSION_INFO_DMG,
+		AXIAL_NONUNIFORMITY,
+		GRID_NONUNIFORMITY,
+		UNUSED_ERR_CORRECTION,
+		PRINT_GROWTH_HORIZONTAL,
+		PRINT_GROWTH_VERTICAL,
+		END
+	};
+
+	/***********************************************************************************************/
+	//NOTE:
+	//Add in other grading standards as needed, make sure to adjust code to use new grading standard
+	//If enough variance is added to standards, reference to a variable in the ini to select grading
+	//standards
+	/***********************************************************************************************/
+
 
 	// Check if the first line is empty
 	if (firstLine.empty()) {
@@ -562,19 +590,43 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 		batchID = prepstring.substr(batchIDIndex + 6);
 	}
 
-
+	//find the colon and save the rest of the string in the string stream
 	size_t colonIndex = code.find(":");
 	if (colonIndex != std::string::npos) {
 		data = code.substr(0, colonIndex);
-		character = code.substr(colonIndex + 1, 1);
-
-		if (character == "A") num = 5;
-		else if (character == "B") num = 4;
-		else if (character == "C") num = 3;
-		else if (character == "D") num = 2;
-		else if (character == "F") num = 1;
-		else num = 0; // Using 0 to denote a blank space
+		iss.str(code.substr(colonIndex + 1));
+		
+		//while there are values to extract, save them to the map as ints
+		int index = 0;
+		while (std::getline(iss, token, '/') && index < ISO_15415_Grades::END) {
+			if (token != "-") {
+				ISO_15415[index] = std::stoi(token);
+			}
+			else {
+				ISO_15415[index] = 0;
+			}
+			index++;
+		}
 	}
+	else {
+		OutputDebugString("Error Reading Data\n");
+	}
+
+	// Extracting grades needed - can change this to specified grades in ini file
+	int axial = ISO_15415[ISO_15415_Grades::AXIAL_NONUNIFORMITY];
+	int growth_H = ISO_15415[ISO_15415_Grades::PRINT_GROWTH_HORIZONTAL];
+	int growth_V = ISO_15415[ISO_15415_Grades::PRINT_GROWTH_VERTICAL];
+
+	//set the grade to the minimum grade
+	int grade = min(axial, min(growth_H, growth_V));
+
+	//assign a letter grade
+	if (grade == 5) character = "A";
+	else if (grade == 4) character = "B";
+	else if (grade == 3) character = "C";
+	else if (grade == 2) character = "D";
+	else if (grade == 1) character = "F";
+	else character = "-"; // Using 0 to denote a blank space
 
 	// Get current date and time
 	auto t = std::time(nullptr);
@@ -590,8 +642,8 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 				<< materialID << ", "
 				<< batchID << ", "
 				<< data << ", " << character;
-			if (num != 0) {
-				oss << ", " << num;
+			if (grade != 0) {
+				oss << ", " << grade;
 			}
 			oss << "\n";
 			outFile << oss.str();
