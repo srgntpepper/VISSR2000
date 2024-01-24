@@ -537,7 +537,7 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 	std::string token;
 	std::string character;
 
-	// Grading for ISO_16415 standard
+	// Grading for ISO_15415 standard
 	enum ISO_15415_Grades {
 		OVERALL,
 		DECODE,
