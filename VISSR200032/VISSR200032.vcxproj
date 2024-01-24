@@ -162,6 +162,7 @@
     <ClInclude Include="conversions.h" />
     <ClInclude Include="dirent.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="resource1.h" />
     <ClInclude Include="SR2000Dev.h" />
     <ClInclude Include="stdAfx.h" />
     <ClInclude Include="visconfig.h" />
@@ -194,6 +195,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="vissr200032.ini" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="VISSR200032.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
