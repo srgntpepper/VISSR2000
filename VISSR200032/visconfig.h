@@ -1,4 +1,4 @@
-//#include "stdafx.h"
+#pragma once
 #ifndef VISCONFIG_H
 #define VISCONFIG_H
 

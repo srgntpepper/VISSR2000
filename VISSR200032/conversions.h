@@ -1,5 +1,5 @@
 #pragma once
-#include "stdAfx.h"
+//#include "stdAfx.h"
 /***************************************************************************
 	CONVERSION FUNCTIONS - Only useful for unicode implementation
 ***************************************************************************/

@@ -1,4 +1,5 @@
-#include "stdAfx.h"
+//#include "stdAfx.h"
+#pragma once
 
 struct XV2S;
 struct XV2;

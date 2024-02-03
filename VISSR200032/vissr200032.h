@@ -1,3 +1,4 @@
+#pragma once
 #include "SR2000Dev.h"
 #include "visconfig.h"
 
@@ -39,7 +40,7 @@ extern BOOL injog;
 extern ConfigIni VISConfig;
 
 extern HWND hWndCalPopup;
-//extern void setCalPopupInfo(char* txt);
+extern void setCalPopupInfo(char* txt);
 
 extern void openJog();
 extern void closeJog();

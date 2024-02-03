@@ -4,7 +4,6 @@
 ***************************************************************************/
 #include "stdafx.h"
 
-
 CAMCAL::CAMCAL()
 {
 	hWnd = 0;
@@ -96,8 +95,8 @@ BOOL CAMCAL::loadsolution()
 	}
 
 	///	zzz call
-	///	zzz code
-	return false;*/
+	///	zzz code*/
+	return false;
 }
 
 void CAMCAL::savesolution()

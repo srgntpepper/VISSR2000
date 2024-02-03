@@ -1,7 +1,4 @@
 #include "stdAfx.h"
-#include "SR2000Dev.h"
-#include "conversions.h"
-
 
 const int RECV_DATA_MAX	= 10240;
 bool gMessageBoxDisplayed = false;
@@ -847,6 +844,158 @@ DWORD WINAPI _LiveLocateProc(LPSTR lpData)
 	return ((SR2000DEV*)lpData)->LiveLocateProc();
 }
 
+BOOL SR2000DEV::syncProgTrigRead(enum vismode xmode)
+{
+	mode = xmode;
+	locateFailed = false;
+	//if (!selProg(cliSock))//send socket for Device1
+	//{
+	//	sprintf_s(ebuf, sizeof(ebuf), "Unable to select locator program %s on %s",
+	//		progid, pDeviceName);
+	//	DevInfo.ErrorText = ebuf;
+	//	Notify(VISN_ERROR);
+	//	return false;
+	//}
+	
+	/*if (!trigAndParse(cliSock))
+	{
+		if (mode == xRead)
+		{
+			sprintf_s(ebuf, sizeof(ebuf), "%s Read Failure",
+				pDeviceName);
+			DevInfo.ErrorText = ebuf;
+		}
+		else if (mode == xInspect)
+		{
+			Notify(VISN_FAIL);
+			return true;
+		}
+		if (mode == xLiveLocate)
+			return false;
+		if (mode == xLocate || mode == xLocatePostJog)
+			DevInfo.ErrorText = "Locate Failed";
+		Notify(VISN_ERROR);
+		return false;
+	}*/
+	if (mode == xLocate || mode == xLocatePostJog || mode == xCal)
+	{
+		if (locateFailed)
+		{
+			///seq
+			if (mode == xCal || (mode == xLocate && !optNoJog))
+			{
+				openJog();
+				return true;
+			}
+			DevInfo.ErrorText = "Locate Failed";
+			Notify(VISN_LOCATEFAIL);
+			//			Notify(VISN_ERROR);
+			return true;
+		}
+		///seq
+		if (mode == xCal)
+		{
+			if (calIndex == 5)
+			{
+				/// update calibaration
+				/// check for bad points
+				camcal.npCam = 4;
+				for (int i = 0; i < 4; i++)
+					camcal.pCam[i] = XV2S(calCamPos[i + 1]);
+				camcal.rCam = calCamPos[0];
+				camcal.computesolution();
+				if (hWndCalPopup)
+					InvalidateRect(hWndCalPopup, NULL, true);
+				if (DebugMode)
+					for (int i = 0; i < 5; i++)
+					{
+						sprintf_s(tbuf, sizeof(tbuf), "XY %0.3f,%0.3f,%0.3f CAM %0.0f,%0.0f\n"
+							, calXYPos[i].x
+							, calXYPos[i].y
+							, calXYPos[i].z
+							, calCamPos[i].v2[0]
+							, calCamPos[i].v2[1]
+						);
+						OutputDebugString(tbuf);
+					}
+				return true;
+			}
+			else if (calIndex < 5)
+			{
+				getXYPos();
+				calXYPos[calIndex] = xypos;
+				/////////////////////////////////////////////////
+				calCamPos[calIndex] = V2(camx, camy);
+				/////////////////////////////////////////////////
+				///static V2 hackCamPos[5]=                      ///
+				///	{V2(320.0,240.0)
+				///	,V2(200.0,120.0)
+				///	,V2(440.0,120.0)
+				///	,V2(440.0,360.0)
+				///	,V2(200.0,360.0)
+				///	};
+				///calCamPos[calIndex]=hackCamPos[calIndex];     ///
+				/////////////////////////////////////////////////
+			}
+			calIndex++;
+			switch (calIndex)
+			{
+				
+				case 1:
+				{
+					
+					moveXYRel(calXYOffset); 
+					break;
+				}
+				case 2:
+				{
+					V2 temp = V2(-2, 0);
+					moveXYRel(calXYOffset * temp); 
+					break;
+
+				}
+				case 3:
+				{
+					V2 temp = V2(0, -2);
+					moveXYRel(calXYOffset * temp);
+					break;
+				}
+				case 4: 
+				{
+					V2 temp = V2(2, 0);
+					moveXYRel(calXYOffset * temp);
+					break;
+				}
+				case 5: 
+				{
+					V2 temp = V2(-1, 1);
+					moveXYRel(calXYOffset * temp);
+					break;
+				}
+
+			}
+			return true;
+		}
+
+		/// option to error here if !dev.camcal.calOk
+
+		dev.locpos = dev.xypos;
+		V2 cal = V2(camx, camy);
+		V2 dxy = dev.camcal.cam2dev(cal); // Apply Cal Transform (if calOk)
+		dev.locpos.x += dxy.v2[0] * 2 * calXYOffset.v2[0];
+		dev.locpos.y += dxy.v2[1] * 2 * calXYOffset.v2[1];
+		dev.DevInfo.nLocatePoints = 1;
+		dev.DevInfo.LocatePoints = &dev.locpos;
+		Notify(VISN_LOCATE);
+		return true;
+	}
+	else if (mode == xInspect)
+		Notify(locateFailed ? VISN_FAIL : VISN_PASS);
+	else // mode==xRead
+		Notify(VISN_READ);
+	return true;
+}
+
 
 // ok = startLiveLocate()
 // Starts the live locate thread
@@ -906,12 +1055,14 @@ void SR2000DEV::getXYPos()
 }
 
 
-//void SR2000DEV::moveXYRel(V2& v)
-//{
-//	getXYPos();
-//	V2 pos = V2(xypos.x, xypos.y)+v;
-//	SendMessage(xywnd, XYM_MOVE, 0, (LPARAM)(LPDOUBLE)&pos.v2);
-//}
+void SR2000DEV::moveXYRel(const V2& v)
+{
+	getXYPos();
+	V2 tempV = v;
+	V2 pos = V2(xypos.x, xypos.y);			//Chris Davis 2/2/2024 - was V2 pos = V2(xypos.x, xypos.y)+v, but not registering overloaded operator
+	pos = pos + tempV;
+	SendMessage(xywnd, XYM_MOVE, 0, (LPARAM)(LPDOUBLE)&pos.v2);
+}
 
 
 

@@ -1,4 +1,4 @@
-
+#pragma once
 /*******************************************************************************
 	Name : CamCal.h
 	Desc : Camera Calibration Module

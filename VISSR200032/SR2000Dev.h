@@ -1,5 +1,5 @@
 #pragma once
-#include "stdAfx.h"
+//#include "stdAfx.h"
 class SR2000DEV
 {
 	BOOL isOpen;
@@ -47,8 +47,8 @@ public:
 	int calIndex;   // index of next point to store
 private:
 	P3 calXYPos[5]; // cal xy positions : center and 4 corner positions
-	//V2 calCamPos[5]; // cal camera pixel positions : ref and 4 corners
-	//V2 calXYOffset; //  vector from ini with real space vector to move cam to put item in upper left
+	V2 calCamPos[5]; // cal camera pixel positions : ref and 4 corners
+	V2 calXYOffset; //  vector from ini with real space vector to move cam to put item in upper left
 
 public:
 
@@ -62,7 +62,7 @@ public:
 	HWND xywnd;
 	P3 xypos;  // xy table position of locate
 	P3 locpos; // xy table position of located pixel (vs xy as trained)
-	//CAMCAL camcal;  // The Cameral Calibration
+	CAMCAL camcal;  // The Cameral Calibration
 
 	enum vismode { xRead, xInspect, xLocate, xLiveLocate, xLocatePostJog, xSnap, xCal } mode;
 
@@ -71,14 +71,14 @@ public:
 	//BOOL powerup(char* ini, char* section);
 	BOOL open(WORD idc, HWND parent, LPSTR ini, LPSTR section);
 	void prep(char* prepstring);
-	//BOOL syncProgTrigRead(enum vismode xmode);
+	BOOL syncProgTrigRead(enum vismode xmode);
 	void Notify(WORD n);
 
 	BOOL startLiveLocate();
 	BOOL killLiveLocate();
 	BOOL isLiveLocateRunning() { return (BOOL)hLiveLocateThread; }
 	void getXYPos();
-	//void moveXYRel(V2& v);
+	void moveXYRel(const V2& v);
 
 	//Enter device specific routines, in this case for SR2000...
 	void SrClientSocket_Init();

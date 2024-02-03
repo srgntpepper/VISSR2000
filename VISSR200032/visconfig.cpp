@@ -1,6 +1,4 @@
 #include "stdAfx.h"
-#include "visconfig.h"
-#include "vissr200032.h"
 
 static ConfigIni* TheConfig;
 

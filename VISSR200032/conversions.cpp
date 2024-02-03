@@ -1,4 +1,4 @@
-#include "conversions.h"
+#include "stdAfx.h"
 
 /*********************************************************************************
 	Conversions - Only necessary for Unicode Char Set

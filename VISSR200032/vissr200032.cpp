@@ -4,11 +4,6 @@
 ***************************************************************************/
 #include "stdAfx.h"
 #include "dirent.h"
-//#include "vissr200032.h"
-#include "conversions.h"
-#include <iostream>
-
-
 
 /***************************************************************************
 	OS INTERFACE FUNCTION PROTOTYPES
@@ -544,78 +539,78 @@ extern "C" _declspec (dllexport) void VISCancel(void)
 BOOL CALLBACK _CALPOPUPDP(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP)
 {
 	
-	//RECT r;
-	//switch (msg)
-	//{
-	//case WM_INITDIALOG:
-	//	char calPopupWinRect[] = "CalPopupWinRect";
-	//	if (GetPrivateProfileIntVect(LibName, calPopupWinRect, (LPINT)&r, 4, LibIni))
-	//		SetWindowPos(hwnd, 0, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-	//	dev.camcal.glPrep(hwnd);
-	//	//memory management, make sure to delete when done using
-	//	delete[] calPopupWinRect;
-	//	return true;
-	//case WM_SETFOCUS:
-	//	if (wP)
-	//		SetFocus((HWND)wP);
-	//	return false;
-	//case WM_COMMAND:
-	//	switch (LOWORD(wP))
-	//	{
-	//	case IDC_CALNOW: // at current position
-	//		///ZZZ MOVE TEST
-	//		if (dev.xywnd && !injog)
-	//		{
-	//			///seq
-	//			dev.calIndex = 0;
-	//			dev.syncProgTrigRead(IFMO2DDEV::xCal);
-	//		}
-	//		return true;
-	//	case IDC_CALLIVE:
-	//		/// IF IN LIVE LOCATE
-	//		if (dev.isLiveLocateRunning())
-	//			dev.killLiveLocate();
-	//		else
-	//			dev.startLiveLocate();
-	//		/// UPDATE BUTTON TO REFLECT STATE
-	//		return true;
-	//	case IDC_CALSNAP:
-	//		if (dev.isLiveLocateRunning())
-	//			dev.killLiveLocate();
-	//		else
-	//			dev.syncProgTrigRead(IFMO2DDEV::xSnap);
-	//		return true;
-	//	case IDC_CALSAVE:
-	//		dev.camcal.savesolution();
-	//		return true;
-	//	case IDC_CALRELOAD:
-	//		dev.camcal.loadsolution();
-	//		InvalidateRect(hWndCalPopup, NULL, true);
-	//		return true;
-	//	}
-	//	return false;
-	//case WM_CTLCOLOREDIT:
-	//	SetBkColor((HDC)wP, dev.isLiveLocateRunning() ? liveColor : normColor);
-	//	return dev.isLiveLocateRunning() ? (BOOL)liveBrush : (BOOL)normBrush;
-	//case WM_SIZE:
-	//case WM_MOVE:
-	//	SaveWinRect(hwnd);
-	//	return false;
-	//case WM_CLOSE:
-	//	closeCalPopup();
-	//	break;
-	//case WM_DESTROY:
-	//	dev.camcal.glDone();
-	//	break;
-	//case WM_PAINT:
-	//{
-	//	PAINTSTRUCT ps;
-	//	BeginPaint(hwnd, &ps);
-	//	dev.camcal.glDraw(ps.hdc);
-	//	EndPaint(hwnd, &ps);
-	//}
-	//return true;
-	//}
+	RECT r;
+	switch (msg)
+	{
+	case WM_INITDIALOG:
+	{
+		char calPopupWinRect[] = "CalPopupWinRect";
+		if (GetPrivateProfileIntVect(LibName, calPopupWinRect, (LPINT)&r, 4, LibIni))
+			SetWindowPos(hwnd, 0, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+		dev.camcal.glPrep(hwnd);
+		return true;
+	}
+	case WM_SETFOCUS:
+		if (wP)
+			SetFocus((HWND)wP);
+		return false;
+	case WM_COMMAND:
+		switch (LOWORD(wP))
+		{
+		case IDC_CALNOW: // at current position
+			///ZZZ MOVE TEST
+			if (dev.xywnd && !injog)
+			{
+				///seq
+				dev.calIndex = 0;
+				dev.syncProgTrigRead(SR2000DEV::xCal);
+			}
+			return true;
+		case IDC_CALLIVE:
+			/// IF IN LIVE LOCATE
+			if (dev.isLiveLocateRunning())
+				dev.killLiveLocate();
+			else
+				dev.startLiveLocate();
+			/// UPDATE BUTTON TO REFLECT STATE
+			return true;
+		case IDC_CALSNAP:
+			if (dev.isLiveLocateRunning())
+				dev.killLiveLocate();
+			else
+				dev.syncProgTrigRead(SR2000DEV::xSnap);
+			return true;
+		case IDC_CALSAVE:
+			dev.camcal.savesolution();
+			return true;
+		case IDC_CALRELOAD:
+			dev.camcal.loadsolution();
+			InvalidateRect(hWndCalPopup, NULL, true);
+			return true;
+		}
+		return false;
+	case WM_CTLCOLOREDIT:
+		SetBkColor((HDC)wP, dev.isLiveLocateRunning() ? liveColor : normColor);
+		return dev.isLiveLocateRunning() ? (BOOL)liveBrush : (BOOL)normBrush;
+	case WM_SIZE:
+	case WM_MOVE:
+		SaveWinRect(hwnd);
+		return false;
+	case WM_CLOSE:
+		closeCalPopup();
+		break;
+	case WM_DESTROY:
+		dev.camcal.glDone();
+		break;
+	case WM_PAINT:
+	{
+		PAINTSTRUCT ps;
+		BeginPaint(hwnd, &ps);
+		dev.camcal.glDraw(ps.hdc);
+		EndPaint(hwnd, &ps);
+	}
+	return true;
+	}
 	return false;
 }
 

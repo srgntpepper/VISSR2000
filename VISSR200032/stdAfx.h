@@ -71,15 +71,19 @@
 #include <thread>
 #include <codecvt>
 #include <ShlObj.h>
+#include <iostream>
 
-#include "imslib32/imslib32.h"
-#include "jvmath32/jvmath32.H"
-#include "im5000/IM5000.H"
-#include "xy32/Xy32.h"
-#include "vis32/VIS32.H"
+#include <imslib32/imslib32.h>
+#include <jvmath32/jvmath32.H>
+#include <im5000/IM5000.H>
+#include <xy32/Xy32.h>
+#include <vis32/VIS32.H>
 
 #include "xvmath.h"
-//#include "CamCal.h"
+#include "CamCal.h"
+#include "conversions.h"
+#include "visconfig.h"
+#include "SR2000Dev.h"
 #include "vissr200032.h"
 
 
