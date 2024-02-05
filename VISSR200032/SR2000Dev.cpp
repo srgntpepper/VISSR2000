@@ -938,12 +938,12 @@ BOOL SR2000DEV::syncProgTrigRead(enum vismode xmode)
 				/////////////////////////////////////////////////
 			}
 			calIndex++;
+
 			switch (calIndex)
 			{
 				
 				case 1:
 				{
-					
 					moveXYRel(calXYOffset); 
 					break;
 				}
@@ -952,7 +952,6 @@ BOOL SR2000DEV::syncProgTrigRead(enum vismode xmode)
 					V2 temp = V2(-2, 0);
 					moveXYRel(calXYOffset * temp); 
 					break;
-
 				}
 				case 3:
 				{
@@ -972,7 +971,6 @@ BOOL SR2000DEV::syncProgTrigRead(enum vismode xmode)
 					moveXYRel(calXYOffset * temp);
 					break;
 				}
-
 			}
 			return true;
 		}
