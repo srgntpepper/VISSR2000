@@ -384,7 +384,7 @@ extern "C" _declspec (dllexport) void VISLocate(HWND xywnd)
 	{
 		dev.getXYPos();
 		dev.Notify(VISN_SNAP);
-		//dev.syncProgTrigRead(SR2000DEV::xLocate);
+		dev.syncProgTrigRead(SR2000DEV::xLocate);
 	}
 
 	/*
@@ -480,11 +480,11 @@ extern "C" _declspec (dllexport) void VISXYMsg(WORD xyn)
 			///seq
 			if (dev.mode == SR2000DEV::xCal)
 			{
-				//dev.syncProgTrigRead(SR2000DEV::xCal);
+				dev.syncProgTrigRead(SR2000DEV::xCal);
 				break;
 			}
 			Sleep(50);
-			//dev.syncProgTrigRead(SR2000DEV::xLocatePostJog);
+			dev.syncProgTrigRead(SR2000DEV::xLocatePostJog);
 		}
 		if (inmove)
 		{
@@ -493,7 +493,7 @@ extern "C" _declspec (dllexport) void VISXYMsg(WORD xyn)
 			if (dev.mode == SR2000DEV::xCal)
 			{
 				Sleep(SettlingTime);
-				//dev.syncProgTrigRead(SR2000DEV::xCal);
+				dev.syncProgTrigRead(SR2000DEV::xCal);
 			}
 		}
 		break;
