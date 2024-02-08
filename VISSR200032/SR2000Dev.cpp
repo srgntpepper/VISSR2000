@@ -2,6 +2,19 @@
 
 const int RECV_DATA_MAX	= 10240;
 bool gMessageBoxDisplayed = false;
+
+/******************TESTING FROM IFM*******************************/
+static char sStartFailStop[]="startfailstop";// test first!
+static char sStart[]="0001start"; // data from locator is between sStart and sStop
+static char sStart2[]="0001*0001start"; // sometimes after programming IFM we see this prefix instead of sStart
+static char sStop[]="stop\r\n";
+
+#define LSSTART (sizeof(sStart)-1)
+#define LSSTART2 (sizeof(sStart2)-1)
+#define LSSTOP  (sizeof(sStop)-1)
+#define LSSTARTSTOP (LSSTART+LSSTOP)
+#define LSSTARTFAILSTOP (sizeof(sStartFailStop)-1)
+/**************************************************************/
  
 
 /***************************************************************************
@@ -838,11 +851,101 @@ void SR2000DEV::SrClientSocket_Read() {
 	Notify(VISN_READ);
 }
 
-
-DWORD WINAPI _LiveLocateProc(LPSTR lpData)
+BOOL SR2000DEV::trigAndParse(SOCKET cliSock)
 {
-	return ((SR2000DEV*)lpData)->LiveLocateProc();
+	//if we are in locate mode, skip and keep Test mode on the scanner
+	if (mode == xLocate) {
+		return TRUE;
+	}
+	else if (mode == xLocatePostJog) {
+		//Test should be live, so we need to cancel that		
+		SrClientSocket_Quit_Test();
+
+		//if an empty string is returned, return function
+		std::string receivedData = socketCommunication();	//helper function to handle comms with socket
+		if (receivedData.empty()) {
+			SrClientSocket_Loff();
+			Notify(VISN_ERROR);
+			return FALSE;
+		}
+
+		DevInfo.ReadData = receivedData.c_str();
+		setCalPopupInfo(&receivedData[0]);
+	}
+
+			
+	/*
+					BOOL s1 = (memcmp(rxbuf, sStart, LSSTART) == 0);
+					BOOL s2 = (memcmp(rxbuf, sStart2, LSSTART2) == 0);
+					if (!memcmp(rxbuf, sStartFailStop, LSSTARTFAILSTOP))
+					{
+						sprintf_s(ebuf, sizeof(ebuf), "%s Read Error", pDeviceName);
+						DevInfo.ErrorText = ebuf;
+						return false;
+					}
+					else if (s1 || s2)
+					{
+						if (memcmp(rxbuf + ret - LSSTOP, sStop, LSSTOP) == 0)
+						{
+							strncpy_s(readstring, sizeof(readstring), rxbuf + (s2 ? LSSTART2 : LSSTART), ret - LSSTARTSTOP);
+							
+							if (mode == xLocate || mode == xLiveLocate || mode == xLocatePostJog || mode == xSnap || mode == xCal || mode == xInspect || mode == xRead)
+							{
+								setCalPopupInfo(readstring);///
+								// Parse 
+								//	     %%%%% ??? ?? XXXX YYYY AAAAAA %%%%%
+								// PASS#099.8#001#01#0229#0334#-179.2#099.8
+								// FAIL#000.0#000
+								if (!memcmp(readstring, "PASS#", 5))
+								{
+									// parse PASS#099.8#001#01#0229#0334#-179.2#099.8
+									char* p = readstring;
+									int ihash = 0;
+									char* phash;
+									camx = -1;
+									camy = -1;
+									while (phash = strstr(p, "#"))
+									{
+										p = phash + 1;
+										if (ihash == 3) // X
+											camx = atoi(p);
+										else if (ihash == 4)
+											camy = atoi(p);
+										ihash++;
+									}
+									if (camx >= 0 && camy >= 0)
+									{
+										///zzz compute location
+										///zzzneed a device locatepoint P3
+										///zzz set DevInfoLocatePoints to it
+										locateFailed = false;
+									}
+									else
+										locateFailed = true;
+									return true;
+								}
+								if (!memcmp(readstring, "FAIL#", 5))
+								{
+									if (mode == xLocate || mode == xLocatePostJog || mode == xInspect || mode == xRead)
+										locateFailed = true;
+									return true;
+								}
+								// Invalid
+								sprintf_s(ebuf, sizeof(ebuf), "%s : Invalid Response!", pDeviceName);
+								DevInfo.ErrorText = ebuf;
+								locateFailed = true;
+								return false;
+							}
+						}
+					}
+				}
+			}
+		}
+	*/
+	return TRUE;
 }
+
+
 
 BOOL SR2000DEV::syncProgTrigRead(enum vismode xmode)
 {
@@ -857,7 +960,7 @@ BOOL SR2000DEV::syncProgTrigRead(enum vismode xmode)
 	//	return false;
 	//}
 	
-	/*if (!trigAndParse(cliSock))
+	if (!trigAndParse(s_commandSocket))
 	{
 		if (mode == xRead)
 		{
@@ -876,7 +979,7 @@ BOOL SR2000DEV::syncProgTrigRead(enum vismode xmode)
 			DevInfo.ErrorText = "Locate Failed";
 		Notify(VISN_ERROR);
 		return false;
-	}*/
+	}
 	if (mode == xLocate || mode == xLocatePostJog || mode == xCal)
 	{
 		if (locateFailed)
@@ -995,6 +1098,11 @@ BOOL SR2000DEV::syncProgTrigRead(enum vismode xmode)
 }
 
 
+DWORD WINAPI _LiveLocateProc(LPSTR lpData)
+{
+	return ((SR2000DEV*)lpData)->LiveLocateProc();
+}
+
 // ok = startLiveLocate()
 // Starts the live locate thread
 BOOL SR2000DEV::startLiveLocate()
@@ -1016,16 +1124,6 @@ BOOL SR2000DEV::startLiveLocate()
 }
 
 
-BOOL SR2000DEV::killLiveLocate()
-{
-	HANDLE h = hLiveLocateThread;
-	if (h)
-	{
-		killLive = true;
-		return WaitForSingleObject(h, 1000) == WAIT_OBJECT_0;
-	}
-	return true;
-}
 
 
 DWORD SR2000DEV::LiveLocateProc()
@@ -1044,6 +1142,16 @@ DWORD SR2000DEV::LiveLocateProc()
 	return 0;
 }
 
+BOOL SR2000DEV::killLiveLocate()
+{
+	HANDLE h = hLiveLocateThread;
+	if (h)
+	{
+		killLive = true;
+		return WaitForSingleObject(h, 1000) == WAIT_OBJECT_0;
+	}
+	return true;
+}
 
 void SR2000DEV::getXYPos()
 {
@@ -1070,6 +1178,10 @@ void SR2000DEV::moveXYRel(const V2& v)
 ***********************************************************************************/
 
 std::string SR2000DEV::socketCommunication() {
+
+	//clear any buffers in the device first					//Chris Davis 02/07/2024
+	clearDeviceBuffer(s_commandSocket);
+
 	// Trigger a scan by calling SrClientSocket_Lon
 	SrClientSocket_Lon();
 	
@@ -1154,7 +1266,7 @@ std::string SR2000DEV::socketCommunication() {
 
 
 void SR2000DEV::clearDeviceBuffer(SOCKET s) {
-	char tempBuffer[256]; // Temporary buffer
+	char tempBuffer[1024]; // Temporary buffer
 	std::string tempData;
 	int recvSize;
 
@@ -1163,10 +1275,10 @@ void SR2000DEV::clearDeviceBuffer(SOCKET s) {
 	while (true) {
 		recvSize = recv(s, tempBuffer, sizeof(tempBuffer), 0);
 
-		tempBuffer[recvSize] = '\0'; //Null-terminate the received data
+		tempBuffer[recvSize-1] = '\0'; //Null-terminate the received data
 		tempData.assign(tempBuffer, recvSize);
 
-		if (tempData.compare("ERROR") == 0) {
+		if (tempData.compare("ERROR") == 0 || tempData.compare("") == 0) {
 			continue; 
 		}
 		else {
@@ -1186,6 +1298,7 @@ void SR2000DEV::handleTimeout() {
 void SR2000DEV::handleError(const char* message) {
 	SrClientSocket_Loff();
 	showMessageBox(message);
+	DevInfo.ErrorText = message;
 	//Notify(VISN_ERROR);
 }
 

@@ -58,6 +58,7 @@ public:
 	BOOL optCal; // set by -c in prep
 	WORD idc;
 	HWND parent;
+	char readstring[64];///xxx
 	char emsg[100]; // error message or NULL
 	HWND xywnd;
 	P3 xypos;  // xy table position of locate
@@ -103,7 +104,7 @@ public:
 
 private:
 	//BOOL selProg(SOCKET cliSock);
-	//BOOL trigAndParse(SOCKET cliSock);
+	BOOL trigAndParse(SOCKET cliSock);
 	DWORD LiveLocateProc();
 	friend DWORD WINAPI _LiveLocateProc(LPSTR lpData);
 

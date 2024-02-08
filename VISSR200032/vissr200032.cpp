@@ -374,8 +374,8 @@ extern "C" _declspec (dllexport) void VISLocate(HWND xywnd)
 		
 
 	/////////////////////////
-	if (dev.optCal)
-		openCalPopup();
+	//if (dev.optCal)					//Chris Davis 02/07/2024 --This may not apply since trig&parse func is not used
+	openCalPopup();
 	/////////////////////////
 	dev.xywnd = xywnd;
 	if (dev.optJog)
