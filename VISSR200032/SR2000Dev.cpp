@@ -1083,8 +1083,8 @@ BOOL SR2000DEV::syncProgTrigRead(enum vismode xmode)
 		dev.locpos = dev.xypos;
 		V2 cal = V2(camx, camy);
 		V2 dxy = dev.camcal.cam2dev(cal); // Apply Cal Transform (if calOk)
-		dev.locpos.x += dxy.v2[0] * 2 * calXYOffset.v2[0];
-		dev.locpos.y += dxy.v2[1] * 2 * calXYOffset.v2[1];
+		//dev.locpos.x += dxy.v2[0] * 2 * calXYOffset.v2[0];
+		//dev.locpos.y += dxy.v2[1] * 2 * calXYOffset.v2[1];
 		dev.DevInfo.nLocatePoints = 1;
 		dev.DevInfo.LocatePoints = &dev.locpos;
 		Notify(VISN_LOCATE);
@@ -1270,18 +1270,45 @@ void SR2000DEV::clearDeviceBuffer(SOCKET s) {
 	std::string tempData;
 	int recvSize;
 
-	// Optionally set the socket to non-blocking mode here
+	// Set timeout duration
+	struct timeval tv;
+	tv.tv_sec = 3;  // Timeout in seconds
+	tv.tv_usec = 0; // Not setting microseconds
+
+	// Set the receive timeout on the socket
+	if (setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv)) < 0) {
+		perror("setsockopt failed");
+		return;
+	}
 
 	while (true) {
-		recvSize = recv(s, tempBuffer, sizeof(tempBuffer), 0);
+		recvSize = recv(s, tempBuffer, sizeof(tempBuffer)-1, 0);
 
-		tempBuffer[recvSize-1] = '\0'; //Null-terminate the received data
-		tempData.assign(tempBuffer, recvSize);
+		if (recvSize > 0) {
+			tempBuffer[recvSize] = '\0'; // Null-terminate the received data
+			tempData.assign(tempBuffer, recvSize);
 
-		if (tempData.compare("ERROR") == 0 || tempData.compare("") == 0) {
-			continue; 
+			if (tempData.compare("ERROR") == 0 || tempData.compare("ER") == 0 || !(tempData.empty())) {
+				// Conditions to continue clearing the buffer
+				continue;
+			}
+			else {
+				break; // Exit loop if the buffer is clear or received data doesn't match conditions
+			}
+		}
+		else if (recvSize == 0) {
+			// Connection has been gracefully closed
+			break;
 		}
 		else {
+			//// recvSize < 0, an error occurred or the call timed out
+			//int error = WSAGetLastError();
+			//if (error == WSAETIMEDOUT) {
+			//	printf("recv timed out.\n");
+			//}
+			//else {
+			//	perror("recv failed");
+			//}
 			break;
 		}
 	}

@@ -342,7 +342,7 @@ extern "C" _declspec (dllexport) void VISLive(BOOL enable)
 	if (enable)
 	{
 		/////////////////////////
-		//openCalPopup();
+		openCalPopup();
 		//dev.startLiveLocate();///
 		/////////////////////////
 		dev.SrClientSocket_Test();
@@ -354,7 +354,7 @@ extern "C" _declspec (dllexport) void VISLive(BOOL enable)
 		dev.SrClientSocket_Quit_Test();
 		/////////////////////////
 		//dev.killLiveLocate(); ///
-		//closeCalPopup();
+		closeCalPopup();
 		/////////////////////////
 		if (DebugMode)
 			OutputDebugString("VISLive(off)\n");
@@ -375,7 +375,6 @@ extern "C" _declspec (dllexport) void VISLocate(HWND xywnd)
 
 	/////////////////////////
 	//if (dev.optCal)					//Chris Davis 02/07/2024 --This may not apply since trig&parse func is not used
-	openCalPopup();
 	/////////////////////////
 	dev.xywnd = xywnd;
 	if (dev.optJog)
@@ -521,6 +520,8 @@ extern "C" _declspec (dllexport) void VISCancel(void)
 {
 	closeJog();
 	dev.killLiveLocate();
+	dev.SrClientSocket_Loff();
+	dev.SrClientSocket_Quit_Test();
 	closeCalPopup();
 }
 
