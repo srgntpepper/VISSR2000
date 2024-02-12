@@ -342,7 +342,7 @@ extern "C" _declspec (dllexport) void VISLive(BOOL enable)
 	if (enable)
 	{
 		/////////////////////////
-		openCalPopup();
+		//openCalPopup();
 		//dev.startLiveLocate();///
 		/////////////////////////
 		dev.SrClientSocket_Test();
@@ -354,7 +354,7 @@ extern "C" _declspec (dllexport) void VISLive(BOOL enable)
 		dev.SrClientSocket_Quit_Test();
 		/////////////////////////
 		//dev.killLiveLocate(); ///
-		closeCalPopup();
+		//closeCalPopup();
 		/////////////////////////
 		if (DebugMode)
 			OutputDebugString("VISLive(off)\n");
@@ -376,14 +376,14 @@ extern "C" _declspec (dllexport) void VISLocate(HWND xywnd)
 	/////////////////////////
 	//if (dev.optCal)					//Chris Davis 02/07/2024 --This may not apply since trig&parse func is not used
 	/////////////////////////
-	dev.xywnd = xywnd;
+	//dev.xywnd = xywnd;
 	/*if (dev.optJog)
 		openJog();*/
 	
 	dev.SrClientSocket_Test();
-	dev.getXYPos();
+	//dev.getXYPos();
 	dev.Notify(VISN_SNAP);
-	dev.syncProgTrigRead(SR2000DEV::xLocate);
+	//dev.syncProgTrigRead(SR2000DEV::xLocate);
 	
 	/*
 	--------------------------------------------------
@@ -462,7 +462,7 @@ extern "C" _declspec (dllexport) void VISXYMsg(WORD xyn)
 	{
 	case XYN_JOG:
 		///openCalPopup();///
-		dev.startLiveLocate();///
+		//dev.startLiveLocate();///
 		injog = TRUE;
 		break;
 	case XYN_MOVE:
@@ -474,7 +474,7 @@ extern "C" _declspec (dllexport) void VISXYMsg(WORD xyn)
 		{
 			injog = false;
 			dev.getXYPos();
-			dev.killLiveLocate();
+			//dev.killLiveLocate();
 			///seq
 			if (dev.mode == SR2000DEV::xCal)
 			{

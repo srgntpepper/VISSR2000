@@ -1089,9 +1089,9 @@ BOOL SR2000DEV::syncProgTrigRead(enum vismode xmode)
 		dev.locpos.y += dxy.v2[1] * 2 * calXYOffset.v2[1];
 		dev.DevInfo.nLocatePoints = 1;
 		dev.DevInfo.LocatePoints = &dev.locpos;
-		if (mode == xLocatePostJog) {
+		/*if (mode == xLocatePostJog) {
 			syncProgTrigRead(xCal);
-		}
+		}*/
 		Notify(VISN_LOCATE);
 		return true;
 	}
