@@ -377,16 +377,14 @@ extern "C" _declspec (dllexport) void VISLocate(HWND xywnd)
 	//if (dev.optCal)					//Chris Davis 02/07/2024 --This may not apply since trig&parse func is not used
 	/////////////////////////
 	dev.xywnd = xywnd;
-	if (dev.optJog)
-		openJog();
-	else
-	{
-		dev.SrClientSocket_Test();
-		dev.getXYPos();
-		dev.Notify(VISN_SNAP);
-		dev.syncProgTrigRead(SR2000DEV::xLocate);
-	}
-
+	/*if (dev.optJog)
+		openJog();*/
+	
+	dev.SrClientSocket_Test();
+	dev.getXYPos();
+	dev.Notify(VISN_SNAP);
+	dev.syncProgTrigRead(SR2000DEV::xLocate);
+	
 	/*
 	--------------------------------------------------
 	Locator1 CAL Locate
