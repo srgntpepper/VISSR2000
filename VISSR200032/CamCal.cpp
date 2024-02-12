@@ -75,15 +75,15 @@ static void WritePrivateProfileShortVect(char* sect, char* key, short* v, int n,
 
 BOOL CAMCAL::loadsolution()
 {
-	/*XM3 _mx;
+	XM3 _mx;
 	XM3 _mxi;
 	XV2S _pCam[4];
 	V2 _rCam;
 
-	BOOL mxOk = GetPrivateProfileVect(IniSection, "mx", &_mx.m[0][0], 9, LibIni);
-	BOOL mxiOk = GetPrivateProfileVect(IniSection, "mxi", &_mxi.m[0][0], 9, LibIni);
-	BOOL pCamOk = GetPrivateProfileShortVect(IniSection, "pCam", &_pCam[0].x, 8, LibIni);
-	BOOL rCamOk = GetPrivateProfileVect(IniSection, "rCam", &_rCam.v2[0], 2, LibIni);
+	BOOL mxOk = GetPrivateProfileVect(IniSection, (LPSTR)"mx", &_mx.m[0][0], 9, LibIni);
+	BOOL mxiOk = GetPrivateProfileVect(IniSection, (LPSTR)"mxi", &_mxi.m[0][0], 9, LibIni);
+	BOOL pCamOk = GetPrivateProfileShortVect(IniSection, (LPSTR)"pCam", &_pCam[0].x, 8, LibIni);
+	BOOL rCamOk = GetPrivateProfileVect(IniSection, (LPSTR)"rCam", &_rCam.v2[0], 2, LibIni);
 	if (mxOk && mxiOk && pCamOk && rCamOk)
 	{
 		mx = _mx;
@@ -95,16 +95,16 @@ BOOL CAMCAL::loadsolution()
 	}
 
 	///	zzz call
-	///	zzz code*/
+	///	zzz code
 	return false;
 }
 
 void CAMCAL::savesolution()
 {
-	/*WritePrivateProfileVect(IniSection, "mx", &mx.m[0][0], 9, LibIni);
-	WritePrivateProfileVect(IniSection, "mxi", &mxi.m[0][0], 9, LibIni);
-	WritePrivateProfileShortVect(IniSection, "pCam", &pCam[0].x, 8, LibIni);
-	WritePrivateProfileVect(IniSection, "rCam", &rCam.v2[0], 2, LibIni);*/
+	WritePrivateProfileVect(IniSection, (LPSTR)"mx", &mx.m[0][0], 9, LibIni);
+	WritePrivateProfileVect(IniSection, (LPSTR)"mxi", &mxi.m[0][0], 9, LibIni);
+	WritePrivateProfileShortVect(IniSection, (LPSTR)"pCam", &pCam[0].x, 8, LibIni);
+	WritePrivateProfileVect(IniSection, (LPSTR)"rCam", &rCam.v2[0], 2, LibIni);
 
 	/*
 	nonexistent WriteProfileVect(

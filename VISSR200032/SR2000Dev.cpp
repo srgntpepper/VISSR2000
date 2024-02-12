@@ -80,6 +80,8 @@ SR2000DEV::~SR2000DEV() {
 	//upon deletion of object
 	//free up sockets
 	if (connected) {
+		SrClientSocket_Quit_Test();
+		SrClientSocket_Loff();
 		closesocket(s_commandSocket);
 		closesocket(s_dataSocket);
 		s_commandSocket = INVALID_SOCKET;
@@ -1083,10 +1085,13 @@ BOOL SR2000DEV::syncProgTrigRead(enum vismode xmode)
 		dev.locpos = dev.xypos;
 		V2 cal = V2(camx, camy);
 		V2 dxy = dev.camcal.cam2dev(cal); // Apply Cal Transform (if calOk)
-		//dev.locpos.x += dxy.v2[0] * 2 * calXYOffset.v2[0];
-		//dev.locpos.y += dxy.v2[1] * 2 * calXYOffset.v2[1];
+		dev.locpos.x += dxy.v2[0] * 2 * calXYOffset.v2[0];
+		dev.locpos.y += dxy.v2[1] * 2 * calXYOffset.v2[1];
 		dev.DevInfo.nLocatePoints = 1;
 		dev.DevInfo.LocatePoints = &dev.locpos;
+		if (mode == xLocatePostJog) {
+			syncProgTrigRead(xCal);
+		}
 		Notify(VISN_LOCATE);
 		return true;
 	}
@@ -1186,7 +1191,7 @@ std::string SR2000DEV::socketCommunication() {
 	SrClientSocket_Lon();
 	
 	// Wait for a non-empty message back with a timeout in seconds specified by the ini
-	char responseBuffer[256];
+	char responseBuffer[1024];
 	std::string receivedData;
 	int bytesRead;
 
@@ -1270,6 +1275,7 @@ void SR2000DEV::clearDeviceBuffer(SOCKET s) {
 	std::string tempData;
 	int recvSize;
 
+	//Chris Davis 02/07/2024 --Non-blocking functionality has been added
 	// Set timeout duration
 	struct timeval tv;
 	tv.tv_sec = 3;  // Timeout in seconds

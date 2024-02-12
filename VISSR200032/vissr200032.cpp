@@ -381,6 +381,7 @@ extern "C" _declspec (dllexport) void VISLocate(HWND xywnd)
 		openJog();
 	else
 	{
+		dev.SrClientSocket_Test();
 		dev.getXYPos();
 		dev.Notify(VISN_SNAP);
 		dev.syncProgTrigRead(SR2000DEV::xLocate);
@@ -612,7 +613,7 @@ BOOL CALLBACK _CALPOPUPDP(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP)
 	}
 	return true;
 	}
-	return false;
+return false;
 }
 
 
