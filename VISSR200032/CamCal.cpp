@@ -139,6 +139,7 @@ void CAMCAL::computesolution()
 	b = b * mx1;
 	c = c * mx1;
 	d = d * mx1;
+	
 
 	/// prevent /0
 	///	double shy=-((b.y()-a.y())/(b.x()-a.x()));
