@@ -18,7 +18,7 @@ extern "C" _declspec (dllexport) BOOL VISOpen(HWND parent, int id, HWND * adwnd)
 extern "C" _declspec (dllexport) void VISClose(void);
 extern "C" _declspec (dllexport) void VISPoll(void);
 extern "C" _declspec (dllexport) void VISPrep(LPSTR prepstring);
-extern "C" _declspec (dllexport) void VISGetPrepNames(LPSTR prepnames);
+//extern "C" _declspec (dllexport) void VISGetPrepNames(LPSTR prepnames);
 extern "C" _declspec (dllexport) void VISInspect(void);
 extern "C" _declspec (dllexport) void VISRead(void);
 extern "C" _declspec (dllexport) void VISLive(BOOL enable);
@@ -30,10 +30,10 @@ extern "C" _declspec (dllexport) BOOL VISConfigIni(HWND parent);
 /***************************************************************************
 	CALPOPUP DIALOG INTERFACE PROTOTYPES
 ***************************************************************************/
-BOOL CALLBACK _CALPOPUPDP(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP);
-static void openCalPopup();
-static void closeCalPopup();
-static void SaveWinRect(HWND hwnd);
+//BOOL CALLBACK _CALPOPUPDP(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP);
+//static void openCalPopup();
+//static void closeCalPopup();
+//static void SaveWinRect(HWND hwnd);
 
 /***************************************************************************
 	GLOBAL VARIABLES
@@ -119,8 +119,8 @@ void InitializeDLL()
 	SettlingTime = GetPrivateProfileInt(IniSection, "SettlingTime", 3000, LibIni);
 	SettlingTime = max(SettlingTime, 100);
 	SettlingTime = min(SettlingTime, 5000);
-	liveBrush = CreateSolidBrush(liveColor);
-	normBrush = CreateSolidBrush(normColor);
+	//liveBrush = CreateSolidBrush(liveColor);
+	//normBrush = CreateSolidBrush(normColor);
 
 	// Set the initialization flag to indicate that initialization is complete
 	isInitialized = true;
@@ -244,7 +244,7 @@ extern "C" _declspec (dllexport) BOOL VISOpen(HWND parent, int id, HWND * adwnd)
 /***************************************************************************
 	VISClose()
 
-	Close the comm port.
+	Close the communication socket.
 ***************************************************************************/
 extern "C" _declspec (dllexport) void VISClose(void)
 {
@@ -259,6 +259,7 @@ extern "C" _declspec (dllexport) void VISClose(void)
 	VIS backround polling routine.
 	This should be called frequently from either a timer or in a
 	peekmessage loop.
+	**NOTE: this method should only be applicable in serial communication**
 ***************************************************************************/
 extern "C" _declspec (dllexport) void VISPoll(void)
 {
@@ -273,7 +274,7 @@ extern "C" _declspec (dllexport) void VISPrep(LPSTR prepstring)
 {
 	if (DebugMode)
 	{
-		//we need to convert prepString from LPSTR to LPCWSTR - for unicode only
+		//for unicode only - we need to convert prepString from LPSTR to LPCWSTR
 		//std::wstring prepStringWide = ConvertToLPCWSTR(prepstring);
 
 		OutputDebugString("VISPrep(");
@@ -283,28 +284,30 @@ extern "C" _declspec (dllexport) void VISPrep(LPSTR prepstring)
 	dev.prep(prepstring);
 }
 
+//This function is not needed for this version of the DLL
 /***************************************************************************
 	VISGetPrepNames(char VisDirectory)
 
 	Returns the CSV list of availiable prep/object names
+	**NOTE:May only be applicable to IFM software**
 ***************************************************************************/
-extern "C" _declspec (dllexport) void VISGetPrepNames(LPSTR VisDirectory)
-{
-	DIR* dir;
-	struct dirent* ent;
-	if ((dir = opendir(VisDirectory)) != NULL) {
-		/* Search all the files and directories within directory */
-		while ((ent = readdir(dir)) != NULL) {
-			printf("%s\n", ent->d_name);
-		}
-		closedir(dir);
-	}
-	else {
-		/* could not open directory */
-		perror("");
-		//	return EXIT_FAILURE;
-	}
-}
+//extern "C" _declspec (dllexport) void VISGetPrepNames(LPSTR VisDirectory)
+//{
+//	DIR* dir;
+//	struct dirent* ent;
+//	if ((dir = opendir(VisDirectory)) != NULL) {
+//		/* Search all the files and directories within directory */
+//		while ((ent = readdir(dir)) != NULL) {
+//			printf("%s\n", ent->d_name);
+//		}
+//		closedir(dir);
+//	}
+//	else {
+//		/* could not open directory */
+//		perror("");
+//		//	return EXIT_FAILURE;
+//	}
+//}
 
 /***************************************************************************
 	VISInspect()
@@ -341,10 +344,6 @@ extern "C" _declspec (dllexport) void VISLive(BOOL enable)
 {
 	if (enable)
 	{
-		/////////////////////////
-		//openCalPopup();
-		//dev.startLiveLocate();///
-		/////////////////////////
 		dev.SrClientSocket_Test();
 		if (DebugMode)
 			OutputDebugString("VISLive(on)\n");
@@ -352,10 +351,6 @@ extern "C" _declspec (dllexport) void VISLive(BOOL enable)
 	else
 	{
 		dev.SrClientSocket_Quit_Test();
-		/////////////////////////
-		//dev.killLiveLocate(); ///
-		//closeCalPopup();
-		/////////////////////////
 		if (DebugMode)
 			OutputDebugString("VISLive(off)\n");
 			
@@ -369,122 +364,37 @@ extern "C" _declspec (dllexport) void VISLocate(HWND xywnd)
 {
 	if (DebugMode)
 		OutputDebugString("VISLocate()\n");
-	dev.xywnd = xywnd;
-	SendMessage(xywnd, XYM_JOG, 0, 0);
-		
-
-	/////////////////////////
-	//if (dev.optCal)					//Chris Davis 02/07/2024 --This may not apply since trig&parse func is not used
-	/////////////////////////
-	//dev.xywnd = xywnd;
-	/*if (dev.optJog)
-		openJog();*/
-	
-	dev.SrClientSocket_Test();
-	//dev.getXYPos();
 	dev.Notify(VISN_SNAP);
-	//dev.syncProgTrigRead(SR2000DEV::xLocate);
+	dev.SrClientSocket_Test();
+	dev.xywnd = xywnd;
+	SendMessage(dev.xywnd, XYM_JOG, 0, 0);
 	
-	/*
-	--------------------------------------------------
-	Locator1 CAL Locate
-		Prep:-p004 -c
-		startCalPopup (due to -c)
-		:CalPopup:SnapButton
-			killLiveLocate
-			Locate
-			Locate:Found
-				>newloc
-			Locate:NotFound
-				>noloc
-		:calPopup:LiveButton
-			startLiveLocate
-		:calPopup:StopButton
-			killLiveLocate
-		:calPopup:JogButton
-			startJog
-
-		:LiveLocate:Found
-			>newloc
-		:LiveLocate:NotFound
-			>noloc
-
-
-		:newloc
-			camPos=CAM PIXEL POS
-		:noloc
-			camPos=unknown
-		:xyJogComplete
-			xyPos=XY POS
-			if(camPos)
-				wcsDelta=
-				wcsLocate=
-		:calPopup:UpdateCalButton
-		:calPopup:OkButton (completes locate and closes)
-		:calPopup:CancelButton (cancles locate and closes)
-	--------------------------------------------------
-	Locator1 Locate
-		Prep:-p004
-		Locate
-			IF FOUND
-				camPos=CAM PIXEL POS
-				>LocateComplete
-			ELSE
-				startJog
-				startLiveLocate
-
-			ON LiveLocate
-				IF FOUND
-					camPos=CAM PIXEL POS
-				ELSE
-					camPos=UNKNOWN
-
-			ON JOG COMPLETE
-				if(camPos)
-					>LocateCompete
-
-		:LocateCompete
-			wcsDelta=c2w(camPos)-c2w(refPos)
-			wcsLocate=wcsJog+wcsDelta
-			// IF Z CHANGED INVALID CAL
-
-
-	--------------------------------------------------
-	*/
+	//dev.getXYPos();
 }
 
 // VISXYMsg accepts messages from xy table during locate jog
-
 extern "C" _declspec (dllexport) void VISXYMsg(WORD xyn)
 {
 	
 	switch (xyn)
 	{
 	case XYN_JOG:
-		///openCalPopup();///
-		//dev.startLiveLocate();///
 		injog = TRUE;
 		break;
-	case XYN_MOVE:
+	/*case XYN_MOVE:
 		inmove = TRUE;
 		///seq
-		break;
+		break;*/
 	case XYN_READY:
 		if (injog)
 		{
 			injog = false;
 			dev.getXYPos();
-			//dev.killLiveLocate();
-			///seq
-			if (dev.mode == SR2000DEV::xCal)
-			{
-				dev.syncProgTrigRead(SR2000DEV::xCal);
-				break;
-			}
-			Sleep(50);
-			dev.syncProgTrigRead(SR2000DEV::xLocatePostJog);
+			dev.DevInfo.nLocatePoints = 1;
+			dev.DevInfo.LocatePoints = &dev.xypos;
+			dev.Notify(VISN_LOCATE);
 		}
-		if (inmove)
+		/*if (inmove)
 		{
 			inmove = false;
 			///seq
@@ -493,21 +403,21 @@ extern "C" _declspec (dllexport) void VISXYMsg(WORD xyn)
 				Sleep(SettlingTime);
 				dev.syncProgTrigRead(SR2000DEV::xCal);
 			}
-		}
+		}*/
 		break;
 	case XYN_ERROR:
 		if (injog)
 		{
 			injog = false;
-			dev.killLiveLocate();
+			//dev.killLiveLocate();
 			dev.DevInfo.ErrorText = "XY Error!";
 			dev.Notify(VISN_ERROR);
 		}
-		if (inmove)
+		/*if (inmove)
 		{
 			///seq
 			inmove = false;
-		}
+		}*/
 		break;
 	}
 
@@ -518,10 +428,9 @@ extern "C" _declspec (dllexport) void VISXYMsg(WORD xyn)
 extern "C" _declspec (dllexport) void VISCancel(void)
 {
 	closeJog();
-	dev.killLiveLocate();
+	//dev.killLiveLocate();
 	dev.SrClientSocket_Loff();
 	dev.SrClientSocket_Quit_Test();
-	closeCalPopup();
 }
 
 
@@ -536,128 +445,128 @@ extern "C" _declspec (dllexport) void VISCancel(void)
 		 this dll was built off of.
 ***************************************************************************/
 
-BOOL CALLBACK _CALPOPUPDP(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP)
-{
-	
-	RECT r;
-	switch (msg)
-	{
-	case WM_INITDIALOG:
-	{
-		char calPopupWinRect[] = "CalPopupWinRect";
-		if (GetPrivateProfileIntVect(LibName, calPopupWinRect, (LPINT)&r, 4, LibIni))
-			SetWindowPos(hwnd, 0, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-		dev.camcal.glPrep(hwnd);
-		return true;
-	}
-	case WM_SETFOCUS:
-		if (wP)
-			SetFocus((HWND)wP);
-		return false;
-	case WM_COMMAND:
-		switch (LOWORD(wP))
-		{
-		case IDC_CALNOW: // at current position
-			///ZZZ MOVE TEST
-			if (dev.xywnd && !injog)
-			{
-				///seq
-				dev.calIndex = 0;
-				dev.syncProgTrigRead(SR2000DEV::xCal);
-			}
-			return true;
-		case IDC_CALLIVE:
-			/// IF IN LIVE LOCATE
-			if (dev.isLiveLocateRunning())
-				dev.killLiveLocate();
-			else
-				dev.startLiveLocate();
-			/// UPDATE BUTTON TO REFLECT STATE
-			return true;
-		case IDC_CALSNAP:
-			if (dev.isLiveLocateRunning())
-				dev.killLiveLocate();
-			else
-				dev.syncProgTrigRead(SR2000DEV::xSnap);
-			return true;
-		case IDC_CALSAVE:
-			dev.camcal.savesolution();
-			return true;
-		case IDC_CALRELOAD:
-			dev.camcal.loadsolution();
-			InvalidateRect(hWndCalPopup, NULL, true);
-			return true;
-		}
-		return false;
-	case WM_CTLCOLOREDIT:
-		SetBkColor((HDC)wP, dev.isLiveLocateRunning() ? liveColor : normColor);
-		return dev.isLiveLocateRunning() ? (BOOL)liveBrush : (BOOL)normBrush;
-	case WM_SIZE:
-	case WM_MOVE:
-		SaveWinRect(hwnd);
-		return false;
-	case WM_CLOSE:
-		closeCalPopup();
-		break;
-	case WM_DESTROY:
-		dev.camcal.glDone();
-		break;
-	case WM_PAINT:
-	{
-		PAINTSTRUCT ps;
-		BeginPaint(hwnd, &ps);
-		dev.camcal.glDraw(ps.hdc);
-		EndPaint(hwnd, &ps);
-	}
-	return true;
-	}
-return false;
-}
+//BOOL CALLBACK _CALPOPUPDP(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP)
+//{
+//	
+//	RECT r;
+//	switch (msg)
+//	{
+//	case WM_INITDIALOG:
+//	{
+//		char calPopupWinRect[] = "CalPopupWinRect";
+//		if (GetPrivateProfileIntVect(LibName, calPopupWinRect, (LPINT)&r, 4, LibIni))
+//			SetWindowPos(hwnd, 0, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+//		dev.camcal.glPrep(hwnd);
+//		return true;
+//	}
+//	case WM_SETFOCUS:
+//		if (wP)
+//			SetFocus((HWND)wP);
+//		return false;
+//	case WM_COMMAND:
+//		switch (LOWORD(wP))
+//		{
+//		case IDC_CALNOW: // at current position
+//			///ZZZ MOVE TEST
+//			if (dev.xywnd && !injog)
+//			{
+//				///seq
+//				dev.calIndex = 0;
+//				dev.syncProgTrigRead(SR2000DEV::xCal);
+//			}
+//			return true;
+//		case IDC_CALLIVE:
+//			/// IF IN LIVE LOCATE
+//			if (dev.isLiveLocateRunning())
+//				dev.killLiveLocate();
+//			else
+//				dev.startLiveLocate();
+//			/// UPDATE BUTTON TO REFLECT STATE
+//			return true;
+//		case IDC_CALSNAP:
+//			if (dev.isLiveLocateRunning())
+//				dev.killLiveLocate();
+//			else
+//				dev.syncProgTrigRead(SR2000DEV::xSnap);
+//			return true;
+//		case IDC_CALSAVE:
+//			dev.camcal.savesolution();
+//			return true;
+//		case IDC_CALRELOAD:
+//			dev.camcal.loadsolution();
+//			InvalidateRect(hWndCalPopup, NULL, true);
+//			return true;
+//		}
+//		return false;
+//	case WM_CTLCOLOREDIT:
+//		SetBkColor((HDC)wP, dev.isLiveLocateRunning() ? liveColor : normColor);
+//		return dev.isLiveLocateRunning() ? (BOOL)liveBrush : (BOOL)normBrush;
+//	case WM_SIZE:
+//	case WM_MOVE:
+//		SaveWinRect(hwnd);
+//		return false;
+//	case WM_CLOSE:
+//		closeCalPopup();
+//		break;
+//	case WM_DESTROY:
+//		dev.camcal.glDone();
+//		break;
+//	case WM_PAINT:
+//	{
+//		PAINTSTRUCT ps;
+//		BeginPaint(hwnd, &ps);
+//		dev.camcal.glDraw(ps.hdc);
+//		EndPaint(hwnd, &ps);
+//	}
+//	return true;
+//	}
+//return false;
+//}
 
 
-static void openCalPopup()
-{
-	if (!hWndCalPopup)
-	{
-		hWndCalPopup = CreateDialog(hLib, "CALPOPUP", NULL, _CALPOPUPDP);
-		ShowWindow(hWndCalPopup, SW_SHOWNA);
-	}
-}
+//static void openCalPopup()
+//{
+//	if (!hWndCalPopup)
+//	{
+//		hWndCalPopup = CreateDialog(hLib, "CALPOPUP", NULL, _CALPOPUPDP);
+//		ShowWindow(hWndCalPopup, SW_SHOWNA);
+//	}
+//}
 
 
 
-static void closeCalPopup()
-{
-	if (hWndCalPopup)
-		DestroyWindow(hWndCalPopup);
-	hWndCalPopup = 0;
-}
+//static void closeCalPopup()
+//{
+//	if (hWndCalPopup)
+//		DestroyWindow(hWndCalPopup);
+//	hWndCalPopup = 0;
+//}
 
 
-static void SaveWinRect(HWND hWnd)
-{
-	
-	RECT WinRect;
-	GetWindowRect(hWnd, &WinRect);
+//static void SaveWinRect(HWND hWnd)
+//{
+//	
+//	RECT WinRect;
+//	GetWindowRect(hWnd, &WinRect);
+//
+//	WinRect.left = max(WinRect.left, 0);
+//	WinRect.top = max(WinRect.top, 0);
+//
+//	wsprintf(tbuf, "%d,%d,%d,%d",
+//		WinRect.left, WinRect.top, WinRect.right, WinRect.bottom);
+//	WritePrivateProfileString(LibName, "CalPopupWinRect", tbuf, LibIni);
+//	
+//}
 
-	WinRect.left = max(WinRect.left, 0);
-	WinRect.top = max(WinRect.top, 0);
 
-	wsprintf(tbuf, "%d,%d,%d,%d",
-		WinRect.left, WinRect.top, WinRect.right, WinRect.bottom);
-	WritePrivateProfileString(LibName, "CalPopupWinRect", tbuf, LibIni);
-	
-}
-
-
-void setCalPopupInfo(char* txt)
-{
-	//for unicode only
-	//std::wstring wtxt = ConvertToLPCWSTR(txt);
-
-	if (hWndCalPopup)
-		SetDlgItemText(hWndCalPopup, IDC_CALINFO, txt);
-}
+//void setCalPopupInfo(char* txt)
+//{
+//	//for unicode only
+//	//std::wstring wtxt = ConvertToLPCWSTR(txt);
+//
+//	if (hWndCalPopup)
+//		SetDlgItemText(hWndCalPopup, IDC_CALINFO, txt);
+//}
 
 
 void openJog()

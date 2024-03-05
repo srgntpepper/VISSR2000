@@ -72,14 +72,14 @@ public:
 	//BOOL powerup(char* ini, char* section);
 	BOOL open(WORD idc, HWND parent, LPSTR ini, LPSTR section);
 	void prep(char* prepstring);
-	BOOL syncProgTrigRead(enum vismode xmode);
+	//BOOL syncProgTrigRead(enum vismode xmode);
 	void Notify(WORD n);
 
-	BOOL startLiveLocate();
-	BOOL killLiveLocate();
+	//BOOL startLiveLocate();
+	//BOOL killLiveLocate();
 	BOOL isLiveLocateRunning() { return (BOOL)hLiveLocateThread; }
 	void getXYPos();
-	void moveXYRel(const V2& v);
+	//void moveXYRel(const V2& v);
 
 	//Enter device specific routines, in this case for SR2000...
 	void SrClientSocket_Init();
@@ -104,7 +104,7 @@ public:
 
 private:
 	//BOOL selProg(SOCKET cliSock);
-	BOOL trigAndParse(SOCKET cliSock);
+	//BOOL trigAndParse(SOCKET cliSock);
 	DWORD LiveLocateProc();
 	friend DWORD WINAPI _LiveLocateProc(LPSTR lpData);
 

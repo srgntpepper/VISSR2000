@@ -832,7 +832,7 @@ void SR2000DEV::SrClientSocket_Inspect() {
 
 
 /***************************************************************************
-	SrClientSocket_Inspect()
+	SrClientSocket_Read()
 
 	Triggers a scan by calling SrClientSocket_Lon.  Function then waits for
 	a message back. When it receives a messages back, it notifies outputs 
@@ -853,310 +853,310 @@ void SR2000DEV::SrClientSocket_Read() {
 	Notify(VISN_READ);
 }
 
-BOOL SR2000DEV::trigAndParse(SOCKET cliSock)
-{
-	//if we are in locate mode, skip and keep Test mode on the scanner
-	if (mode == xLocate) {
-		return TRUE;
-	}
-	else if (mode == xLocatePostJog) {
-		//Test should be live, so we need to cancel that		
-		SrClientSocket_Quit_Test();
-
-		//if an empty string is returned, return function
-		std::string receivedData = socketCommunication();	//helper function to handle comms with socket
-		if (receivedData.empty()) {
-			SrClientSocket_Loff();
-			Notify(VISN_ERROR);
-			return FALSE;
-		}
-
-		DevInfo.ReadData = receivedData.c_str();
-		setCalPopupInfo(&receivedData[0]);
-	}
-
-			
-	/*
-					BOOL s1 = (memcmp(rxbuf, sStart, LSSTART) == 0);
-					BOOL s2 = (memcmp(rxbuf, sStart2, LSSTART2) == 0);
-					if (!memcmp(rxbuf, sStartFailStop, LSSTARTFAILSTOP))
-					{
-						sprintf_s(ebuf, sizeof(ebuf), "%s Read Error", pDeviceName);
-						DevInfo.ErrorText = ebuf;
-						return false;
-					}
-					else if (s1 || s2)
-					{
-						if (memcmp(rxbuf + ret - LSSTOP, sStop, LSSTOP) == 0)
-						{
-							strncpy_s(readstring, sizeof(readstring), rxbuf + (s2 ? LSSTART2 : LSSTART), ret - LSSTARTSTOP);
-							
-							if (mode == xLocate || mode == xLiveLocate || mode == xLocatePostJog || mode == xSnap || mode == xCal || mode == xInspect || mode == xRead)
-							{
-								setCalPopupInfo(readstring);///
-								// Parse 
-								//	     %%%%% ??? ?? XXXX YYYY AAAAAA %%%%%
-								// PASS#099.8#001#01#0229#0334#-179.2#099.8
-								// FAIL#000.0#000
-								if (!memcmp(readstring, "PASS#", 5))
-								{
-									// parse PASS#099.8#001#01#0229#0334#-179.2#099.8
-									char* p = readstring;
-									int ihash = 0;
-									char* phash;
-									camx = -1;
-									camy = -1;
-									while (phash = strstr(p, "#"))
-									{
-										p = phash + 1;
-										if (ihash == 3) // X
-											camx = atoi(p);
-										else if (ihash == 4)
-											camy = atoi(p);
-										ihash++;
-									}
-									if (camx >= 0 && camy >= 0)
-									{
-										///zzz compute location
-										///zzzneed a device locatepoint P3
-										///zzz set DevInfoLocatePoints to it
-										locateFailed = false;
-									}
-									else
-										locateFailed = true;
-									return true;
-								}
-								if (!memcmp(readstring, "FAIL#", 5))
-								{
-									if (mode == xLocate || mode == xLocatePostJog || mode == xInspect || mode == xRead)
-										locateFailed = true;
-									return true;
-								}
-								// Invalid
-								sprintf_s(ebuf, sizeof(ebuf), "%s : Invalid Response!", pDeviceName);
-								DevInfo.ErrorText = ebuf;
-								locateFailed = true;
-								return false;
-							}
-						}
-					}
-				}
-			}
-		}
-	*/
-	return TRUE;
-}
-
-
-
-BOOL SR2000DEV::syncProgTrigRead(enum vismode xmode)
-{
-	mode = xmode;
-	locateFailed = false;
-	//if (!selProg(cliSock))//send socket for Device1
-	//{
-	//	sprintf_s(ebuf, sizeof(ebuf), "Unable to select locator program %s on %s",
-	//		progid, pDeviceName);
-	//	DevInfo.ErrorText = ebuf;
-	//	Notify(VISN_ERROR);
-	//	return false;
-	//}
-	
-	if (!trigAndParse(s_commandSocket))
-	{
-		if (mode == xRead)
-		{
-			sprintf_s(ebuf, sizeof(ebuf), "%s Read Failure",
-				pDeviceName);
-			DevInfo.ErrorText = ebuf;
-		}
-		else if (mode == xInspect)
-		{
-			Notify(VISN_FAIL);
-			return true;
-		}
-		if (mode == xLiveLocate)
-			return false;
-		if (mode == xLocate || mode == xLocatePostJog)
-			DevInfo.ErrorText = "Locate Failed";
-		Notify(VISN_ERROR);
-		return false;
-	}
-	if (mode == xLocate || mode == xLocatePostJog || mode == xCal)
-	{
-		if (locateFailed)
-		{
-			///seq
-			if (mode == xCal || (mode == xLocate && !optNoJog))
-			{
-				openJog();
-				return true;
-			}
-			DevInfo.ErrorText = "Locate Failed";
-			Notify(VISN_LOCATEFAIL);
-			//			Notify(VISN_ERROR);
-			return true;
-		}
-		///seq
-		if (mode == xCal)
-		{
-			if (calIndex == 5)
-			{
-				/// update calibaration
-				/// check for bad points
-				camcal.npCam = 4;
-				for (int i = 0; i < 4; i++)
-					camcal.pCam[i] = XV2S(calCamPos[i + 1]);
-				camcal.rCam = calCamPos[0];
-				camcal.computesolution();
-				if (hWndCalPopup)
-					InvalidateRect(hWndCalPopup, NULL, true);
-				if (DebugMode)
-					for (int i = 0; i < 5; i++)
-					{
-						sprintf_s(tbuf, sizeof(tbuf), "XY %0.3f,%0.3f,%0.3f CAM %0.0f,%0.0f\n"
-							, calXYPos[i].x
-							, calXYPos[i].y
-							, calXYPos[i].z
-							, calCamPos[i].v2[0]
-							, calCamPos[i].v2[1]
-						);
-						OutputDebugString(tbuf);
-					}
-				return true;
-			}
-			else if (calIndex < 5)
-			{
-				getXYPos();
-				calXYPos[calIndex] = xypos;
-				/////////////////////////////////////////////////
-				calCamPos[calIndex] = V2(camx, camy);
-				/////////////////////////////////////////////////
-				///static V2 hackCamPos[5]=                      ///
-				///	{V2(320.0,240.0)
-				///	,V2(200.0,120.0)
-				///	,V2(440.0,120.0)
-				///	,V2(440.0,360.0)
-				///	,V2(200.0,360.0)
-				///	};
-				///calCamPos[calIndex]=hackCamPos[calIndex];     ///
-				/////////////////////////////////////////////////
-			}
-			calIndex++;
-
-			switch (calIndex)
-			{
-				
-				case 1:
-				{
-					moveXYRel(calXYOffset); 
-					break;
-				}
-				case 2:
-				{
-					V2 temp = V2(-2, 0);
-					moveXYRel(calXYOffset * temp); 
-					break;
-				}
-				case 3:
-				{
-					V2 temp = V2(0, -2);
-					moveXYRel(calXYOffset * temp);
-					break;
-				}
-				case 4: 
-				{
-					V2 temp = V2(2, 0);
-					moveXYRel(calXYOffset * temp);
-					break;
-				}
-				case 5: 
-				{
-					V2 temp = V2(-1, 1);
-					moveXYRel(calXYOffset * temp);
-					break;
-				}
-			}
-			return true;
-		}
-
-		/// option to error here if !dev.camcal.calOk
-
-		dev.locpos = dev.xypos;
-		V2 cal = V2(camx, camy);
-		V2 dxy = dev.camcal.cam2dev(cal); // Apply Cal Transform (if calOk)
-		dev.locpos.x += dxy.v2[0] * 2 * calXYOffset.v2[0];
-		dev.locpos.y += dxy.v2[1] * 2 * calXYOffset.v2[1];
-		dev.DevInfo.nLocatePoints = 1;
-		dev.DevInfo.LocatePoints = &dev.locpos;
-		/*if (mode == xLocatePostJog) {
-			syncProgTrigRead(xCal);
-		}*/
-		Notify(VISN_LOCATE);
-		return true;
-	}
-	else if (mode == xInspect)
-		Notify(locateFailed ? VISN_FAIL : VISN_PASS);
-	else // mode==xRead
-		Notify(VISN_READ);
-	return true;
-}
+//BOOL SR2000DEV::trigAndParse(SOCKET cliSock)
+//{
+//	//if we are in locate mode, skip and keep Test mode on the scanner
+//	if (mode == xLocate) {
+//		return TRUE;
+//	}
+//	else if (mode == xLocatePostJog) {
+//		//Test should be live, so we need to cancel that		
+//		SrClientSocket_Quit_Test();
+//
+//		//if an empty string is returned, return function
+//		std::string receivedData = socketCommunication();	//helper function to handle comms with socket
+//		if (receivedData.empty()) {
+//			SrClientSocket_Loff();
+//			Notify(VISN_ERROR);
+//			return FALSE;
+//		}
+//
+//		DevInfo.ReadData = receivedData.c_str();
+//		setCalPopupInfo(&receivedData[0]);
+//	}
+//
+//			
+//	/*
+//					BOOL s1 = (memcmp(rxbuf, sStart, LSSTART) == 0);
+//					BOOL s2 = (memcmp(rxbuf, sStart2, LSSTART2) == 0);
+//					if (!memcmp(rxbuf, sStartFailStop, LSSTARTFAILSTOP))
+//					{
+//						sprintf_s(ebuf, sizeof(ebuf), "%s Read Error", pDeviceName);
+//						DevInfo.ErrorText = ebuf;
+//						return false;
+//					}
+//					else if (s1 || s2)
+//					{
+//						if (memcmp(rxbuf + ret - LSSTOP, sStop, LSSTOP) == 0)
+//						{
+//							strncpy_s(readstring, sizeof(readstring), rxbuf + (s2 ? LSSTART2 : LSSTART), ret - LSSTARTSTOP);
+//							
+//							if (mode == xLocate || mode == xLiveLocate || mode == xLocatePostJog || mode == xSnap || mode == xCal || mode == xInspect || mode == xRead)
+//							{
+//								setCalPopupInfo(readstring);///
+//								// Parse 
+//								//	     %%%%% ??? ?? XXXX YYYY AAAAAA %%%%%
+//								// PASS#099.8#001#01#0229#0334#-179.2#099.8
+//								// FAIL#000.0#000
+//								if (!memcmp(readstring, "PASS#", 5))
+//								{
+//									// parse PASS#099.8#001#01#0229#0334#-179.2#099.8
+//									char* p = readstring;
+//									int ihash = 0;
+//									char* phash;
+//									camx = -1;
+//									camy = -1;
+//									while (phash = strstr(p, "#"))
+//									{
+//										p = phash + 1;
+//										if (ihash == 3) // X
+//											camx = atoi(p);
+//										else if (ihash == 4)
+//											camy = atoi(p);
+//										ihash++;
+//									}
+//									if (camx >= 0 && camy >= 0)
+//									{
+//										///zzz compute location
+//										///zzzneed a device locatepoint P3
+//										///zzz set DevInfoLocatePoints to it
+//										locateFailed = false;
+//									}
+//									else
+//										locateFailed = true;
+//									return true;
+//								}
+//								if (!memcmp(readstring, "FAIL#", 5))
+//								{
+//									if (mode == xLocate || mode == xLocatePostJog || mode == xInspect || mode == xRead)
+//										locateFailed = true;
+//									return true;
+//								}
+//								// Invalid
+//								sprintf_s(ebuf, sizeof(ebuf), "%s : Invalid Response!", pDeviceName);
+//								DevInfo.ErrorText = ebuf;
+//								locateFailed = true;
+//								return false;
+//							}
+//						}
+//					}
+//				}
+//			}
+//		}
+//	*/
+//	return TRUE;
+//}
 
 
-DWORD WINAPI _LiveLocateProc(LPSTR lpData)
-{
-	return ((SR2000DEV*)lpData)->LiveLocateProc();
-}
+
+//BOOL SR2000DEV::syncProgTrigRead(enum vismode xmode)
+//{
+//	mode = xmode;
+//	locateFailed = false;
+//	//if (!selProg(cliSock))//send socket for Device1
+//	//{
+//	//	sprintf_s(ebuf, sizeof(ebuf), "Unable to select locator program %s on %s",
+//	//		progid, pDeviceName);
+//	//	DevInfo.ErrorText = ebuf;
+//	//	Notify(VISN_ERROR);
+//	//	return false;
+//	//}
+//	
+//	if (!trigAndParse(s_commandSocket))
+//	{
+//		if (mode == xRead)
+//		{
+//			sprintf_s(ebuf, sizeof(ebuf), "%s Read Failure",
+//				pDeviceName);
+//			DevInfo.ErrorText = ebuf;
+//		}
+//		else if (mode == xInspect)
+//		{
+//			Notify(VISN_FAIL);
+//			return true;
+//		}
+//		if (mode == xLiveLocate)
+//			return false;
+//		if (mode == xLocate || mode == xLocatePostJog)
+//			DevInfo.ErrorText = "Locate Failed";
+//		Notify(VISN_ERROR);
+//		return false;
+//	}
+//	if (mode == xLocate || mode == xLocatePostJog || mode == xCal)
+//	{
+//		if (locateFailed)
+//		{
+//			///seq
+//			if (mode == xCal || (mode == xLocate && !optNoJog))
+//			{
+//				openJog();
+//				return true;
+//			}
+//			DevInfo.ErrorText = "Locate Failed";
+//			Notify(VISN_LOCATEFAIL);
+//			//			Notify(VISN_ERROR);
+//			return true;
+//		}
+//		///seq
+//		if (mode == xCal)
+//		{
+//			if (calIndex == 5)
+//			{
+//				/// update calibaration
+//				/// check for bad points
+//				camcal.npCam = 4;
+//				for (int i = 0; i < 4; i++)
+//					camcal.pCam[i] = XV2S(calCamPos[i + 1]);
+//				camcal.rCam = calCamPos[0];
+//				camcal.computesolution();
+//				if (hWndCalPopup)
+//					InvalidateRect(hWndCalPopup, NULL, true);
+//				if (DebugMode)
+//					for (int i = 0; i < 5; i++)
+//					{
+//						sprintf_s(tbuf, sizeof(tbuf), "XY %0.3f,%0.3f,%0.3f CAM %0.0f,%0.0f\n"
+//							, calXYPos[i].x
+//							, calXYPos[i].y
+//							, calXYPos[i].z
+//							, calCamPos[i].v2[0]
+//							, calCamPos[i].v2[1]
+//						);
+//						OutputDebugString(tbuf);
+//					}
+//				return true;
+//			}
+//			else if (calIndex < 5)
+//			{
+//				getXYPos();
+//				calXYPos[calIndex] = xypos;
+//				/////////////////////////////////////////////////
+//				calCamPos[calIndex] = V2(camx, camy);
+//				/////////////////////////////////////////////////
+//				///static V2 hackCamPos[5]=                      ///
+//				///	{V2(320.0,240.0)
+//				///	,V2(200.0,120.0)
+//				///	,V2(440.0,120.0)
+//				///	,V2(440.0,360.0)
+//				///	,V2(200.0,360.0)
+//				///	};
+//				///calCamPos[calIndex]=hackCamPos[calIndex];     ///
+//				/////////////////////////////////////////////////
+//			}
+//			calIndex++;
+//
+//			switch (calIndex)
+//			{
+//				
+//				case 1:
+//				{
+//					moveXYRel(calXYOffset); 
+//					break;
+//				}
+//				case 2:
+//				{
+//					V2 temp = V2(-2, 0);
+//					moveXYRel(calXYOffset * temp); 
+//					break;
+//				}
+//				case 3:
+//				{
+//					V2 temp = V2(0, -2);
+//					moveXYRel(calXYOffset * temp);
+//					break;
+//				}
+//				case 4: 
+//				{
+//					V2 temp = V2(2, 0);
+//					moveXYRel(calXYOffset * temp);
+//					break;
+//				}
+//				case 5: 
+//				{
+//					V2 temp = V2(-1, 1);
+//					moveXYRel(calXYOffset * temp);
+//					break;
+//				}
+//			}
+//			return true;
+//		}
+//
+//		/// option to error here if !dev.camcal.calOk
+//
+//		dev.locpos = dev.xypos;
+//		V2 cal = V2(camx, camy);
+//		V2 dxy = dev.camcal.cam2dev(cal); // Apply Cal Transform (if calOk)
+//		dev.locpos.x += dxy.v2[0] * 2 * calXYOffset.v2[0];
+//		dev.locpos.y += dxy.v2[1] * 2 * calXYOffset.v2[1];
+//		dev.DevInfo.nLocatePoints = 1;
+//		dev.DevInfo.LocatePoints = &dev.locpos;
+//		/*if (mode == xLocatePostJog) {
+//			syncProgTrigRead(xCal);
+//		}*/
+//		Notify(VISN_LOCATE);
+//		return true;
+//	}
+//	else if (mode == xInspect)
+//		Notify(locateFailed ? VISN_FAIL : VISN_PASS);
+//	else // mode==xRead
+//		Notify(VISN_READ);
+//	return true;
+//}
+
+
+//DWORD WINAPI _LiveLocateProc(LPSTR lpData)
+//{
+//	return ((SR2000DEV*)lpData)->LiveLocateProc();
+//}
 
 // ok = startLiveLocate()
 // Starts the live locate thread
-BOOL SR2000DEV::startLiveLocate()
-{
-	if (hLiveLocateThread)
-		return !killLive;
-	killLive = false;
-	hLiveLocateThread = CreateThread
-	((LPSECURITY_ATTRIBUTES)NULL
-		, 0
-		, (LPTHREAD_START_ROUTINE)_LiveLocateProc
-		, (LPVOID)this
-		, 0
-		, &dwLiveLocateThreadId
-	);
-	if (!hLiveLocateThread)
-		return false;
-	return true;
-}
+//BOOL SR2000DEV::startLiveLocate()
+//{
+//	if (hLiveLocateThread)
+//		return !killLive;
+//	killLive = false;
+//	hLiveLocateThread = CreateThread
+//	((LPSECURITY_ATTRIBUTES)NULL
+//		, 0
+//		, (LPTHREAD_START_ROUTINE)_LiveLocateProc
+//		, (LPVOID)this
+//		, 0
+//		, &dwLiveLocateThreadId
+//	);
+//	if (!hLiveLocateThread)
+//		return false;
+//	return true;
+//}
 
 
 
 
-DWORD SR2000DEV::LiveLocateProc()
-{
-	BOOL progSelected = false;
-	while (!killLive)
-	{
-		Sleep(100);
-		//if (!progSelected)
-			//progSelected = selProg();
-		//else
-			//trigAndParse();
-	}
-	hLiveLocateThread = 0;
-	killLive = false;
-	return 0;
-}
+//DWORD SR2000DEV::LiveLocateProc()
+//{
+//	BOOL progSelected = false;
+//	while (!killLive)
+//	{
+//		Sleep(100);
+//		//if (!progSelected)
+//			//progSelected = selProg();
+//		//else
+//			//trigAndParse();
+//	}
+//	hLiveLocateThread = 0;
+//	killLive = false;
+//	return 0;
+//}
 
-BOOL SR2000DEV::killLiveLocate()
-{
-	HANDLE h = hLiveLocateThread;
-	if (h)
-	{
-		killLive = true;
-		return WaitForSingleObject(h, 1000) == WAIT_OBJECT_0;
-	}
-	return true;
-}
+//BOOL SR2000DEV::killLiveLocate()
+//{
+//	HANDLE h = hLiveLocateThread;
+//	if (h)
+//	{
+//		killLive = true;
+//		return WaitForSingleObject(h, 1000) == WAIT_OBJECT_0;
+//	}
+//	return true;
+//}
 
 void SR2000DEV::getXYPos()
 {
@@ -1166,14 +1166,14 @@ void SR2000DEV::getXYPos()
 }
 
 
-void SR2000DEV::moveXYRel(const V2& v)
-{
-	getXYPos();
-	V2 tempV = v;
-	V2 pos = V2(xypos.x, xypos.y);			//Chris Davis 2/2/2024 - was V2 pos = V2(xypos.x, xypos.y)+v, but not registering overloaded operator
-	pos = pos + tempV;
-	SendMessage(xywnd, XYM_MOVE, 0, (LPARAM)(LPDOUBLE)&pos.v2);
-}
+//void SR2000DEV::moveXYRel(const V2& v)
+//{
+//	getXYPos();
+//	V2 tempV = v;
+//	V2 pos = V2(xypos.x, xypos.y);			//Chris Davis 2/2/2024 - was V2 pos = V2(xypos.x, xypos.y)+v, but not registering overloaded operator
+//	pos = pos + tempV;
+//	SendMessage(xywnd, XYM_MOVE, 0, (LPARAM)(LPDOUBLE)&pos.v2);
+//}
 
 
 
