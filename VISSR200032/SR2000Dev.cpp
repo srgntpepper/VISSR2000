@@ -27,10 +27,13 @@ public:
 	{
 		sin_family = AF_INET;
 		int conversion_result = inet_pton(AF_INET, ip, &(sin_addr));
-		if (conversion_result <= 0) {
-			if (conversion_result == 0) {
+		if (conversion_result <= 0) 
+		{
+			if (conversion_result == 0) 
+			{
 				// Check if a message box is already displayed
-				if (gMessageBoxDisplayed) {
+				if (gMessageBoxDisplayed) 
+				{
 					return; // Skip displaying the message box
 				}
 
@@ -43,9 +46,11 @@ public:
 				// Reset the flag after the message box is closed
 				gMessageBoxDisplayed = false;
 			}
-			else {
+			else 
+			{
 				// Check if a message box is already displayed
-				if (gMessageBoxDisplayed) {
+				if (gMessageBoxDisplayed) 
+				{
 					return; // Skip displaying the message box
 				}
 
@@ -69,14 +74,16 @@ public:
 /***************************************************************************
 	Ctor/Dtor
 ***************************************************************************/
-SR2000DEV::SR2000DEV() {
+SR2000DEV::SR2000DEV() 
+{
 	if (WSAStartup(MAKEWORD(2, 0), &wsaData) == NO_ERROR) {
 		socketsLoaded = true;
 	}
 }
 
 
-SR2000DEV::~SR2000DEV() {
+SR2000DEV::~SR2000DEV() 
+{
 	//upon deletion of object
 	//free up sockets
 	if (connected) {
@@ -96,7 +103,8 @@ SR2000DEV::~SR2000DEV() {
 
 
 //Function to initialize sockets to ready state
-void SR2000DEV::SrClientSocket_Init() {
+void SR2000DEV::SrClientSocket_Init() 
+{
 	s_commandSocket = INVALID_SOCKET;
 	s_dataSocket = INVALID_SOCKET;
 }
@@ -167,27 +175,6 @@ BOOL SR2000DEV::init(WORD idc, HWND parent, LPSTR iniWide, LPSTR sectionWide)
 		return false;
 	}
 
-	//// Attempt to get MaterialID
-	//if (GetPrivateProfileString(sectionWide, "MaterialID", "", materialID, sizeof(materialID), iniWide) <= 0)
-	//{
-	//	strncpy_s(emsg, sizeof(emsg), "Material ID not found", _TRUNCATE);
-	//
-	//	// Show the message box
-	//	//MessageBoxA(NULL, emsg, "Error", MB_OK | MB_ICONERROR);
-
-	//	return false;
-	//}
-
-	//// Attempt to get BatchID
-	//if (GetPrivateProfileString(sectionWide, "BatchID", "", batchID, sizeof(batchID), iniWide) <= 0)
-	//{
-	//	strncpy_s(emsg, sizeof(emsg), "Batch ID not found", _TRUNCATE);
-	//	
-	//	// Show the message box
-	//	//MessageBoxA(NULL, emsg, "Error", MB_OK | MB_ICONERROR);
-
-	//	return false;
-	//}
 
 	// Open and test TCP connection
 	if (!socketsLoaded)
@@ -200,45 +187,20 @@ BOOL SR2000DEV::init(WORD idc, HWND parent, LPSTR iniWide, LPSTR sectionWide)
 		return false;
 	}
 
-	/*
-	// Display message box with saved information
-	std::wstring message = L"Device Name: " + std::wstring(DeviceName) + L"\n"
-		+ L"Command Port: " + std::wstring(CommandPort) + L"\n"
-		+ L"Data Port: " + std::wstring(DataPort) + L"\n"
-		+ L"Device IP Address: " + std::wstring(DeviceIP) + L"\n";
-
-	
-	// Check if a message box is already displayed
-	if (gMessageBoxDisplayed) {
-		return; // Skip displaying the message box
-	}
-
-	// Set the flag to indicate a message box is displayed
-	gMessageBoxDisplayed = true;
-
-	// Show the message box
-	MessageBox(NULL, message.c_str(), L"Initialization Successful", MB_OK | MB_ICONINFORMATION);
-
-	// Reset the flag after the message box is closed
-	gMessageBoxDisplayed = false;
-
-	// Add a delay to prevent consecutive message boxes
-	std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Adjust the sleep duration as needed
-		
-	*/
-
 	return true;
 }
 
 
 //This function connects us to the scanner.  It makes a connection
 //and manages the sockets
-BOOL SR2000DEV::SrClientSocket_Connect() {
+BOOL SR2000DEV::SrClientSocket_Connect() 
+{
 
 	//convert Command and Data Port to an int
 	int commandPort = strtol(CommandPort, NULL, 10);
 	int dataPort = strtol(DataPort, NULL, 10);
-	if ((commandPort < 1) || (dataPort < 1)) {
+	if ((commandPort < 1) || (dataPort < 1)) 
+	{
 		strncpy_s(emsg, sizeof(emsg), "Ports Cannot Be Used, Check for Typos...", _TRUNCATE);
 		return FALSE;
 	}
@@ -248,7 +210,8 @@ BOOL SR2000DEV::SrClientSocket_Connect() {
 	char* cDeviceIP = new char[len];
 	std::size_t converted_chars = 0;
 	errno_t err = strncpy_s(cDeviceIP, len, DeviceIP, _TRUNCATE);
-	if (err != 0) {
+	if (err != 0) 
+	{
 		delete[] cDeviceIP;
 		cDeviceIP = nullptr;
 	}
@@ -256,25 +219,30 @@ BOOL SR2000DEV::SrClientSocket_Connect() {
 	SOCKADDR4 servAddr(cDeviceIP, commandPort);
 	
 	//close command socket if open already
-	if (s_commandSocket != INVALID_SOCKET) {
+	if (s_commandSocket != INVALID_SOCKET) 
+	{
 		closesocket(s_commandSocket);
 		s_commandSocket = INVALID_SOCKET;
 	}
 
 	//close data socket if open already
-	if (s_dataSocket != INVALID_SOCKET) {
+	if (s_dataSocket != INVALID_SOCKET) 
+	{
 		closesocket(s_dataSocket);
 		s_dataSocket = INVALID_SOCKET;
 	}
 
 	// create a new command socket
 	s_commandSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);	//May need to set third argument to 0 instead of IPPROTO_TCP
-	if (s_commandSocket != INVALID_SOCKET) {
-		if (connect(s_commandSocket, (SOCKADDR*)&servAddr, sizeof(servAddr)) != SOCKET_ERROR) {
+	if (s_commandSocket != INVALID_SOCKET) 
+	{
+		if (connect(s_commandSocket, (SOCKADDR*)&servAddr, sizeof(servAddr)) != SOCKET_ERROR) 
+		{
 			connected = true;
 		}	
 	}
-	if (!connected) {
+	if (!connected) 
+	{
 		strncpy_s(emsg, sizeof(emsg), "Device connection failed", _TRUNCATE);
 		closesocket(s_commandSocket);
 		s_commandSocket = INVALID_SOCKET;
@@ -282,30 +250,36 @@ BOOL SR2000DEV::SrClientSocket_Connect() {
 	}
 
 	//if Data and Command Port are not identical, connect to the Data Port
-	if (strcmp(DataPort, CommandPort) != 0) {
+	if (strcmp(DataPort, CommandPort) != 0) 
+	{
 		connected = false;
 		servAddr.sin_port = (dataPort);
 
 		//create a new socket
 		s_dataSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);	//May need to set third argument to 0 instead of IPPROTO_TCP
 
-		if (s_dataSocket != INVALID_SOCKET) {
+		if (s_dataSocket != INVALID_SOCKET) 
+		{
 			DWORD timeout = 15000; // ms (allow long time for inspects)
-			if (setsockopt(s_dataSocket, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout)) == 0) {
-				if (connect(s_dataSocket, (SOCKADDR*)&servAddr, sizeof(servAddr)) != SOCKET_ERROR) {
+			if (setsockopt(s_dataSocket, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout)) == 0) 
+			{
+				if (connect(s_dataSocket, (SOCKADDR*)&servAddr, sizeof(servAddr)) != SOCKET_ERROR) 
+				{
 					connected = true;
 				}
 			}
 		}
 
-		if (!connected) {
+		if (!connected) 
+		{
 			strncpy_s(emsg, sizeof(emsg), "Device connection failed when Data Port and Command Port are different", _TRUNCATE);
 			closesocket(s_dataSocket);
 			s_dataSocket = INVALID_SOCKET;
 			return FALSE;
 		}
 	}
-	else {
+	else 
+	{
 		s_dataSocket = s_commandSocket;
 	}
 	
@@ -315,15 +289,18 @@ BOOL SR2000DEV::SrClientSocket_Connect() {
 
 
 //This function closes and resets the command and data sockets
-void SR2000DEV::SrClientSocket_Disconnect() {
+void SR2000DEV::SrClientSocket_Disconnect() 
+{
 	//close and reset command socket
-	if (s_commandSocket != INVALID_SOCKET) {
+	if (s_commandSocket != INVALID_SOCKET) 
+	{
 		closesocket(s_commandSocket);
 		s_commandSocket = INVALID_SOCKET;
 	}
 
 	//close and reset data socket
-	if (s_dataSocket != INVALID_SOCKET) {
+	if (s_dataSocket != INVALID_SOCKET) 
+	{
 		closesocket(s_commandSocket);
 		s_dataSocket = INVALID_SOCKET;
 	}
@@ -333,15 +310,18 @@ void SR2000DEV::SrClientSocket_Disconnect() {
 
 
 //This function triggers the scanner to set the scan timing on
-void SR2000DEV::SrClientSocket_Lon() {
+void SR2000DEV::SrClientSocket_Lon() 
+{
 
 	// Send "LON" command 
 	char command[] = "LON\r";	// CR is the terminator
 
-	if (s_commandSocket != INVALID_SOCKET) {
+	if (s_commandSocket != INVALID_SOCKET) 
+	{
 		send(s_commandSocket, command, strlen(command), 0);
 	}
-	else {
+	else 
+	{
 		strncpy_s(emsg, sizeof(emsg), "Device is disconnected", _TRUNCATE);
 	}
 }
@@ -349,45 +329,54 @@ void SR2000DEV::SrClientSocket_Lon() {
 
 //This function turns off the trigger for the scanner
 //should be a manual option for the operator
-void SR2000DEV::SrClientSocket_Loff() {
+void SR2000DEV::SrClientSocket_Loff() 
+{
 
 	//send "LOFF" command
 	char command[] = "LOFF\r";	//CR is the terminator
 
-	if (s_commandSocket != INVALID_SOCKET) {
+	if (s_commandSocket != INVALID_SOCKET) 
+	{
 		send(s_commandSocket, command, strlen(command), 0);
 	}
-	else {
+	else 
+	{
 		strncpy_s(emsg, sizeof(emsg), "Device is disconnected", _TRUNCATE);
 	}
 }
 
 
 //This function triggers the scanner to continuously trigger
-void SR2000DEV::SrClientSocket_Test() {
+void SR2000DEV::SrClientSocket_Test() 
+{
 
 	// Send "TEST1" command 
 	char command[] = "TEST1\r";	// CR is the terminator
 
-	if (s_commandSocket != INVALID_SOCKET) {
+	if (s_commandSocket != INVALID_SOCKET) 
+	{
 		send(s_commandSocket, command, strlen(command), 0);
 	}
-	else {
+	else 
+	{
 		strncpy_s(emsg, sizeof(emsg), "Device is disconnected", _TRUNCATE);
 	}
 }
 
 
 //This function triggers the scanner to turn off continuous trigger
-void SR2000DEV::SrClientSocket_Quit_Test() {
+void SR2000DEV::SrClientSocket_Quit_Test() 
+{
 
 	// Send "QUIT" command 
 	char command[] = "QUIT\r";	// CR is the terminator
 
-	if (s_commandSocket != INVALID_SOCKET) {
+	if (s_commandSocket != INVALID_SOCKET) 
+	{
 		send(s_commandSocket, command, strlen(command), 0);
 	}
-	else {
+	else 
+	{
 		strncpy_s(emsg, sizeof(emsg), "Device is disconnected", _TRUNCATE);
 	}
 }
@@ -400,19 +389,23 @@ inside of whatever ims5000 program has the program saved
 		for the INIT file inside of that IMS5000 directory
 NOTE:This function ended up not being needed, but will remain for other use cases - 9/15/23
 */
-std::string findIniPath() {
+std::string findIniPath() 
+{
 	char buffer[MAX_PATH];
 	DWORD length = GetModuleFileNameA(NULL, buffer, MAX_PATH);
 
-	if (length != 0) {
+	if (length != 0) 
+	{
 		std::string path(buffer, length);
 		size_t pos = path.find("ims5000") - 1;
 		
-		if (pos != std::wstring::npos) {
+		if (pos != std::wstring::npos) 
+		{
 			std::string folder = path.substr(0, pos);
 			std::string iniPath = folder + "\\ims5000\\bin\\INIT.ini";
 	
-			if (GetFileAttributesA(iniPath.c_str()) != INVALID_FILE_ATTRIBUTES) {
+			if (GetFileAttributesA(iniPath.c_str()) != INVALID_FILE_ATTRIBUTES) 
+			{
 				return iniPath;
 			}
 		}
@@ -423,9 +416,11 @@ std::string findIniPath() {
 
 
 //Takes the data received from the scanner and compares it with the prep string
-void SR2000DEV::SrClientSocket_Compare(const std::string& data) {
+void SR2000DEV::SrClientSocket_Compare(const std::string& data) 
+{
 	// lamdba function to trim the data and matchCode
-	auto trim = [](const std::string& s) {
+	auto trim = [](const std::string& s) 
+	{
 		size_t start = s.find_first_not_of(" \t\r\n");
 		size_t end = s.find_last_not_of(" \t\r\n");
 		return (start == std::string::npos) ? "" : s.substr(start, end - start + 1);
@@ -434,57 +429,47 @@ void SR2000DEV::SrClientSocket_Compare(const std::string& data) {
 	std::string trimmedData = trim(data);
 	std::string trimmedMatchCode = trim(matchCode);
 
-	/*Used to evaluate match code*/
-	//char path[MAX_PATH];
-	//SHGetFolderPathA(NULL, CSIDL_DESKTOP, NULL, 0, path);  // SHGetFolderPathA is defined in <Shlobj.h>
-
-	//std::string desktopPath = std::string(path);
-	//std::ofstream csvFile(desktopPath + "\\output.csv", std::ios::app);  // open in append mode
-	//if (csvFile.is_open()) {
-	//	csvFile << trimmedMatchCode << "\n";
-	//	csvFile.close();
-	//}
-
 	//Parse data from match code
 	/*Format: "_JOB=....,_DAT=....,_MID=...,_BID=...." */
 	size_t datIndex = trimmedMatchCode.find("DAT=");
 	size_t mIDIndex = trimmedMatchCode.find(",_MID", datIndex + 4);
 	std::string prepstringData = trimmedMatchCode.substr(datIndex + 4, mIDIndex - (datIndex + 4));
 
-	
-
 	// Compare the received message with matchCode
 	size_t colonPos = trimmedData.find(':');
-	if (colonPos != std::string::npos) {
+	if (colonPos != std::string::npos) 
+	{
 		std::string receivedCode = trimmedData.substr(0, colonPos);
 
-		//For Debugging
-		//MessageBox(NULL, ("prepStringData from Compare = " + prepstringData + "\n receivedCode = " + receivedCode).c_str(), "Inspect", MB_ICONEXCLAMATION | MB_OK);
-
-		if (receivedCode == prepstringData) {
+		if (receivedCode == prepstringData) 
+		{
 			Notify(VISN_PASS);
 			// Call SrClientSocket_Receive with the received data
 			SrClientSocket_Receive(trimmedData, trimmedMatchCode);
 		}
-		else {
+		else 
+		{
 			Notify(VISN_FAIL);
 		}
 	}
-	else {
+	else 
+	{
 		Notify(VISN_ERROR);
 	}
 }
 
 
 //This function receives and handles the data from the scanner
-void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring) {
+void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring) 
+{
 	
 	char desktopPath[MAX_PATH];
 	std::string filePath;
 	std::ofstream outFile;
 
 	// Get the path to the desktop directory
-	if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, desktopPath))) {
+	if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, desktopPath))) 
+	{
 		filePath = std::string(desktopPath) + "\\spectrolab_barcode_data.csv";
 	// Attempt to open file
 	outFile.open(filePath, std::ios_base::app);
@@ -494,10 +479,12 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 	int attempts = 0;
 	//program attempts to open the file 3 times, each time the user is prompted of this
 	//and it given the option to try again or cancel
-	while (!outFile.is_open() && attempts < 3) {
+	while (!outFile.is_open() && attempts < 3) 
+	{
 		
 		// Check if a message box is already displayed
-		if (gMessageBoxDisplayed) {
+		if (gMessageBoxDisplayed) 
+		{
 			return; // Skip displaying the message box
 		}
 
@@ -517,7 +504,8 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 		std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Adjust the sleep duration as needed
 		
 
-		if (msgBoxID == IDCANCEL) {
+		if (msgBoxID == IDCANCEL) 
+		{
 			strncpy_s(emsg, sizeof(emsg), "File operation cancelled by user", _TRUNCATE);
 			return;
 		}
@@ -528,7 +516,8 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 	}
 
 	//If the file is still not open after 3 tries, we get this error
-	if (!outFile.is_open()) {
+	if (!outFile.is_open()) 
+	{
 		strncpy_s(emsg, sizeof(emsg), "Could not open data file", _TRUNCATE);
 		return;
 	}
@@ -576,10 +565,8 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 
 
 	// Check if the first line is empty
-	if (firstLine.empty()) {
-
-		//For Debugging
-		//MessageBox(NULL, "Empty file detected!", "Receive", MB_ICONEXCLAMATION | MB_OK);
+	if (firstLine.empty()) 
+	{
 		
 		// Write new column names
 		outFile << std::left << std::setw(15) << "DATE" << ", "
@@ -595,30 +582,36 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 	/* "_JOB=....,_DAT=....,_MID=...,_BID=...."*/
 	size_t materialIDIndex = prepstring.find(",_MID=");
 	size_t batchIDIndex = prepstring.find(",_BID=", materialIDIndex + 6);
-	if (materialIDIndex != std::string::npos) {
+	if (materialIDIndex != std::string::npos) 
+	{
 		materialID = prepstring.substr(materialIDIndex + 6, batchIDIndex - (materialIDIndex + 6));
 		batchID = prepstring.substr(batchIDIndex + 6);
 	}
 
 	//find the colon and save the rest of the string in the string stream
 	size_t colonIndex = code.find(":");
-	if (colonIndex != std::string::npos) {
+	if (colonIndex != std::string::npos) 
+	{
 		data = code.substr(0, colonIndex);
 		iss.str(code.substr(colonIndex + 1));
 		
 		//while there are values to extract, save them to the map as ints
 		int index = 0;
-		while (std::getline(iss, token, '/') && index < ISO_15415_Grades::END) {
-			if (token != "-") {
+		while (std::getline(iss, token, '/') && index < ISO_15415_Grades::END) 
+		{
+			if (token != "-") 
+			{
 				ISO_15415[index] = std::stoi(token);
 			}
-			else {
+			else 
+			{
 				ISO_15415[index] = 0;
 			}
 			index++;
 		}
 	}
-	else {
+	else 
+	{
 		OutputDebugString("Error Reading Data\n");
 	}
 
@@ -642,9 +635,11 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 	auto t = std::time(nullptr);
 	tm localTime;
 
-	for (int attempt = 0; attempt < 3; ++attempt) {
+	for (int attempt = 0; attempt < 3; ++attempt) 
+	{
 		errno_t err = localtime_s(&localTime, &t);
-		if (err == 0) {
+		if (err == 0) 
+		{
 			// Write data to file
 			std::ostringstream oss;
 			oss << std::put_time(&localTime, "%Y-%m-%d") << ", "
@@ -652,17 +647,20 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 				<< materialID << ", "
 				<< batchID << ", "
 				<< data << ", " << character;
-			if (grade != 0) {
+			if (grade != 0) 
+			{
 				oss << ", " << grade;
 			}
 			oss << "\n";
 			outFile << oss.str();
 			break;
 		}
-		else if (err == EOVERFLOW) {
+		else if (err == EOVERFLOW) 
+		{
 		
 		// Check if a message box is already displayed
-		if (gMessageBoxDisplayed) {
+		if (gMessageBoxDisplayed) 
+		{
 			return; // Skip displaying the message box
 		}
 
@@ -684,12 +682,14 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 		std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Adjust the sleep duration as needed
 		
 
-			if (msgboxID == IDNO) {
+			if (msgboxID == IDNO) 
+			{
 				outFile << "Date and time could not be acquired," << code << "\n";
 				break;
 			}
 		}
-		else {
+		else 
+		{
 			// Create error message
 			char err_msg[256];
 			strerror_s(err_msg, sizeof(err_msg), err);
@@ -698,15 +698,13 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 
 			
 			// Check if a message box is already displayed
-			if (gMessageBoxDisplayed) {
+			if (gMessageBoxDisplayed) 
+			{
 				return; // Skip displaying the message box
 			}
 
 			// Set the flag to indicate a message box is displayed
 			gMessageBoxDisplayed = true;
-
-			// Convert to a format suitable for MessageBox (LPCWSTR) - for unicode only
-			//std::wstring wstr = std::wstring(errorMessage.begin(), errorMessage.end());
 
 			LPCSTR finalMessage = errorMessage.c_str();
 			// Show the message box
@@ -729,7 +727,6 @@ void SR2000DEV::SrClientSocket_Receive(std::string code, std::string prepstring)
 
 BOOL SR2000DEV::open(WORD idc, HWND parent, LPSTR ini, LPSTR section)
 {
-
 	if (!isOpen)
 		isOpen = init(idc, parent, ini, section);
 
@@ -746,9 +743,11 @@ BOOL SR2000DEV::open(WORD idc, HWND parent, LPSTR ini, LPSTR section)
 
 	Arguments: char* prepstring - prep string entered by the user
 ****************************************************************************/
-void SR2000DEV::prep(char* prepstring) {
+void SR2000DEV::prep(char* prepstring) 
+{
 
-	if (prepstring == nullptr) {
+	if (prepstring == nullptr) 
+	{
 		Notify(VISN_ERROR); // Notify error if prepstring is null
 		return;
 	}
@@ -756,7 +755,8 @@ void SR2000DEV::prep(char* prepstring) {
 	strcpy(matchCode, prepstring);
 
 	// Check for errors during strcpy
-	if (errno != 0) {
+	if (errno != 0) 
+	{
 		Notify(VISN_ERROR); // Notify error if an error occurred during strcpy
 	}
 	
@@ -816,11 +816,12 @@ void SR2000DEV::Notify(WORD n)
 
 	
 ***************************************************************************/
-void SR2000DEV::SrClientSocket_Inspect() {
-
+void SR2000DEV::SrClientSocket_Inspect() 
+{
 	//if an empty string is returned, return function
 	std::string receivedData = socketCommunication();	//helper function to handle comms with socket
-	if (receivedData.empty()) {
+	if (receivedData.empty()) 
+	{
 		SrClientSocket_Loff();
 		Notify(VISN_ERROR);
 		return;
@@ -839,11 +840,12 @@ void SR2000DEV::SrClientSocket_Inspect() {
 	a VIS_READ
 
 ***************************************************************************/
-void SR2000DEV::SrClientSocket_Read() {
-	
+void SR2000DEV::SrClientSocket_Read() 
+{
 	//if an empty string is returned, return function
 	std::string receivedData = socketCommunication();	//helper function to handle comms with socket
-	if (receivedData.empty()) {
+	if (receivedData.empty()) 
+	{
 		SrClientSocket_Loff();
 		Notify(VISN_ERROR);
 		return;
@@ -853,329 +855,12 @@ void SR2000DEV::SrClientSocket_Read() {
 	Notify(VISN_READ);
 }
 
-//BOOL SR2000DEV::trigAndParse(SOCKET cliSock)
-//{
-//	//if we are in locate mode, skip and keep Test mode on the scanner
-//	if (mode == xLocate) {
-//		return TRUE;
-//	}
-//	else if (mode == xLocatePostJog) {
-//		//Test should be live, so we need to cancel that		
-//		SrClientSocket_Quit_Test();
-//
-//		//if an empty string is returned, return function
-//		std::string receivedData = socketCommunication();	//helper function to handle comms with socket
-//		if (receivedData.empty()) {
-//			SrClientSocket_Loff();
-//			Notify(VISN_ERROR);
-//			return FALSE;
-//		}
-//
-//		DevInfo.ReadData = receivedData.c_str();
-//		setCalPopupInfo(&receivedData[0]);
-//	}
-//
-//			
-//	/*
-//					BOOL s1 = (memcmp(rxbuf, sStart, LSSTART) == 0);
-//					BOOL s2 = (memcmp(rxbuf, sStart2, LSSTART2) == 0);
-//					if (!memcmp(rxbuf, sStartFailStop, LSSTARTFAILSTOP))
-//					{
-//						sprintf_s(ebuf, sizeof(ebuf), "%s Read Error", pDeviceName);
-//						DevInfo.ErrorText = ebuf;
-//						return false;
-//					}
-//					else if (s1 || s2)
-//					{
-//						if (memcmp(rxbuf + ret - LSSTOP, sStop, LSSTOP) == 0)
-//						{
-//							strncpy_s(readstring, sizeof(readstring), rxbuf + (s2 ? LSSTART2 : LSSTART), ret - LSSTARTSTOP);
-//							
-//							if (mode == xLocate || mode == xLiveLocate || mode == xLocatePostJog || mode == xSnap || mode == xCal || mode == xInspect || mode == xRead)
-//							{
-//								setCalPopupInfo(readstring);///
-//								// Parse 
-//								//	     %%%%% ??? ?? XXXX YYYY AAAAAA %%%%%
-//								// PASS#099.8#001#01#0229#0334#-179.2#099.8
-//								// FAIL#000.0#000
-//								if (!memcmp(readstring, "PASS#", 5))
-//								{
-//									// parse PASS#099.8#001#01#0229#0334#-179.2#099.8
-//									char* p = readstring;
-//									int ihash = 0;
-//									char* phash;
-//									camx = -1;
-//									camy = -1;
-//									while (phash = strstr(p, "#"))
-//									{
-//										p = phash + 1;
-//										if (ihash == 3) // X
-//											camx = atoi(p);
-//										else if (ihash == 4)
-//											camy = atoi(p);
-//										ihash++;
-//									}
-//									if (camx >= 0 && camy >= 0)
-//									{
-//										///zzz compute location
-//										///zzzneed a device locatepoint P3
-//										///zzz set DevInfoLocatePoints to it
-//										locateFailed = false;
-//									}
-//									else
-//										locateFailed = true;
-//									return true;
-//								}
-//								if (!memcmp(readstring, "FAIL#", 5))
-//								{
-//									if (mode == xLocate || mode == xLocatePostJog || mode == xInspect || mode == xRead)
-//										locateFailed = true;
-//									return true;
-//								}
-//								// Invalid
-//								sprintf_s(ebuf, sizeof(ebuf), "%s : Invalid Response!", pDeviceName);
-//								DevInfo.ErrorText = ebuf;
-//								locateFailed = true;
-//								return false;
-//							}
-//						}
-//					}
-//				}
-//			}
-//		}
-//	*/
-//	return TRUE;
-//}
-
-
-
-//BOOL SR2000DEV::syncProgTrigRead(enum vismode xmode)
-//{
-//	mode = xmode;
-//	locateFailed = false;
-//	//if (!selProg(cliSock))//send socket for Device1
-//	//{
-//	//	sprintf_s(ebuf, sizeof(ebuf), "Unable to select locator program %s on %s",
-//	//		progid, pDeviceName);
-//	//	DevInfo.ErrorText = ebuf;
-//	//	Notify(VISN_ERROR);
-//	//	return false;
-//	//}
-//	
-//	if (!trigAndParse(s_commandSocket))
-//	{
-//		if (mode == xRead)
-//		{
-//			sprintf_s(ebuf, sizeof(ebuf), "%s Read Failure",
-//				pDeviceName);
-//			DevInfo.ErrorText = ebuf;
-//		}
-//		else if (mode == xInspect)
-//		{
-//			Notify(VISN_FAIL);
-//			return true;
-//		}
-//		if (mode == xLiveLocate)
-//			return false;
-//		if (mode == xLocate || mode == xLocatePostJog)
-//			DevInfo.ErrorText = "Locate Failed";
-//		Notify(VISN_ERROR);
-//		return false;
-//	}
-//	if (mode == xLocate || mode == xLocatePostJog || mode == xCal)
-//	{
-//		if (locateFailed)
-//		{
-//			///seq
-//			if (mode == xCal || (mode == xLocate && !optNoJog))
-//			{
-//				openJog();
-//				return true;
-//			}
-//			DevInfo.ErrorText = "Locate Failed";
-//			Notify(VISN_LOCATEFAIL);
-//			//			Notify(VISN_ERROR);
-//			return true;
-//		}
-//		///seq
-//		if (mode == xCal)
-//		{
-//			if (calIndex == 5)
-//			{
-//				/// update calibaration
-//				/// check for bad points
-//				camcal.npCam = 4;
-//				for (int i = 0; i < 4; i++)
-//					camcal.pCam[i] = XV2S(calCamPos[i + 1]);
-//				camcal.rCam = calCamPos[0];
-//				camcal.computesolution();
-//				if (hWndCalPopup)
-//					InvalidateRect(hWndCalPopup, NULL, true);
-//				if (DebugMode)
-//					for (int i = 0; i < 5; i++)
-//					{
-//						sprintf_s(tbuf, sizeof(tbuf), "XY %0.3f,%0.3f,%0.3f CAM %0.0f,%0.0f\n"
-//							, calXYPos[i].x
-//							, calXYPos[i].y
-//							, calXYPos[i].z
-//							, calCamPos[i].v2[0]
-//							, calCamPos[i].v2[1]
-//						);
-//						OutputDebugString(tbuf);
-//					}
-//				return true;
-//			}
-//			else if (calIndex < 5)
-//			{
-//				getXYPos();
-//				calXYPos[calIndex] = xypos;
-//				/////////////////////////////////////////////////
-//				calCamPos[calIndex] = V2(camx, camy);
-//				/////////////////////////////////////////////////
-//				///static V2 hackCamPos[5]=                      ///
-//				///	{V2(320.0,240.0)
-//				///	,V2(200.0,120.0)
-//				///	,V2(440.0,120.0)
-//				///	,V2(440.0,360.0)
-//				///	,V2(200.0,360.0)
-//				///	};
-//				///calCamPos[calIndex]=hackCamPos[calIndex];     ///
-//				/////////////////////////////////////////////////
-//			}
-//			calIndex++;
-//
-//			switch (calIndex)
-//			{
-//				
-//				case 1:
-//				{
-//					moveXYRel(calXYOffset); 
-//					break;
-//				}
-//				case 2:
-//				{
-//					V2 temp = V2(-2, 0);
-//					moveXYRel(calXYOffset * temp); 
-//					break;
-//				}
-//				case 3:
-//				{
-//					V2 temp = V2(0, -2);
-//					moveXYRel(calXYOffset * temp);
-//					break;
-//				}
-//				case 4: 
-//				{
-//					V2 temp = V2(2, 0);
-//					moveXYRel(calXYOffset * temp);
-//					break;
-//				}
-//				case 5: 
-//				{
-//					V2 temp = V2(-1, 1);
-//					moveXYRel(calXYOffset * temp);
-//					break;
-//				}
-//			}
-//			return true;
-//		}
-//
-//		/// option to error here if !dev.camcal.calOk
-//
-//		dev.locpos = dev.xypos;
-//		V2 cal = V2(camx, camy);
-//		V2 dxy = dev.camcal.cam2dev(cal); // Apply Cal Transform (if calOk)
-//		dev.locpos.x += dxy.v2[0] * 2 * calXYOffset.v2[0];
-//		dev.locpos.y += dxy.v2[1] * 2 * calXYOffset.v2[1];
-//		dev.DevInfo.nLocatePoints = 1;
-//		dev.DevInfo.LocatePoints = &dev.locpos;
-//		/*if (mode == xLocatePostJog) {
-//			syncProgTrigRead(xCal);
-//		}*/
-//		Notify(VISN_LOCATE);
-//		return true;
-//	}
-//	else if (mode == xInspect)
-//		Notify(locateFailed ? VISN_FAIL : VISN_PASS);
-//	else // mode==xRead
-//		Notify(VISN_READ);
-//	return true;
-//}
-
-
-//DWORD WINAPI _LiveLocateProc(LPSTR lpData)
-//{
-//	return ((SR2000DEV*)lpData)->LiveLocateProc();
-//}
-
-// ok = startLiveLocate()
-// Starts the live locate thread
-//BOOL SR2000DEV::startLiveLocate()
-//{
-//	if (hLiveLocateThread)
-//		return !killLive;
-//	killLive = false;
-//	hLiveLocateThread = CreateThread
-//	((LPSECURITY_ATTRIBUTES)NULL
-//		, 0
-//		, (LPTHREAD_START_ROUTINE)_LiveLocateProc
-//		, (LPVOID)this
-//		, 0
-//		, &dwLiveLocateThreadId
-//	);
-//	if (!hLiveLocateThread)
-//		return false;
-//	return true;
-//}
-
-
-
-
-//DWORD SR2000DEV::LiveLocateProc()
-//{
-//	BOOL progSelected = false;
-//	while (!killLive)
-//	{
-//		Sleep(100);
-//		//if (!progSelected)
-//			//progSelected = selProg();
-//		//else
-//			//trigAndParse();
-//	}
-//	hLiveLocateThread = 0;
-//	killLive = false;
-//	return 0;
-//}
-
-//BOOL SR2000DEV::killLiveLocate()
-//{
-//	HANDLE h = hLiveLocateThread;
-//	if (h)
-//	{
-//		killLive = true;
-//		return WaitForSingleObject(h, 1000) == WAIT_OBJECT_0;
-//	}
-//	return true;
-//}
-
 void SR2000DEV::getXYPos()
 {
 	// Get current xyz locate point
 	SendMessage(xywnd, XYM_GETXYPOS, 0, (LPARAM)(LPDOUBLE)&xypos.x);
 	SendMessage(xywnd, XYM_GETZPOS, 0, (LPARAM)(LPDOUBLE)&xypos.z);
 }
-
-
-//void SR2000DEV::moveXYRel(const V2& v)
-//{
-//	getXYPos();
-//	V2 tempV = v;
-//	V2 pos = V2(xypos.x, xypos.y);			//Chris Davis 2/2/2024 - was V2 pos = V2(xypos.x, xypos.y)+v, but not registering overloaded operator
-//	pos = pos + tempV;
-//	SendMessage(xywnd, XYM_MOVE, 0, (LPARAM)(LPDOUBLE)&pos.v2);
-//}
-
-
 
 /**********************************************************************************
 	Helper Functions
@@ -1198,7 +883,8 @@ std::string SR2000DEV::socketCommunication() {
 	struct timeval timeout;
 	fd_set readfds;
 
-	while (true) {
+	while (true) 
+	{
 		//init the set of active sockets
 		FD_ZERO(&readfds);
 		FD_SET(s_commandSocket, &readfds);
@@ -1209,28 +895,33 @@ std::string SR2000DEV::socketCommunication() {
 
 		int activity = select(s_commandSocket + 1, &readfds, NULL, NULL, &timeout);
 
-		if (activity == SOCKET_ERROR) {
+		if (activity == SOCKET_ERROR) 
+		{
 			handleError("Error getting a response, check the socket.");
 			clearDeviceBuffer(s_commandSocket);  // Clear the buffer
 			return "";
 		}
 
 		//if timeout, handle it
-		if (activity == 0) {
+		if (activity == 0) 
+		{
 			handleTimeout();
 			clearDeviceBuffer(s_commandSocket);  // Clear the buffer
 			return "";
 		}
 
-		if (activity == -1) {
+		if (activity == -1) 
+		{
 			handleError("Errno: " + errno);
 			clearDeviceBuffer(s_commandSocket); //Clear the buffer
 		}
 
 		//if the socket has data
-		if (FD_ISSET(s_commandSocket, &readfds)) {
+		if (FD_ISSET(s_commandSocket, &readfds)) 
+		{
 			bytesRead = recv(s_commandSocket, responseBuffer, sizeof(responseBuffer) - 1, 0);
-			if (bytesRead == SOCKET_ERROR) {
+			if (bytesRead == SOCKET_ERROR) 
+			{
 				//gets the error code from "Windows Socket API"
 				int errorCode = WSAGetLastError();
 
@@ -1238,15 +929,18 @@ std::string SR2000DEV::socketCommunication() {
 				receivedData.assign(responseBuffer, bytesRead);
 
 				//if an error is received, keep reading from the buffer until it is empty
-				if (receivedData.compare("ERROR") == 0) {
+				if (receivedData.compare("ERROR") == 0) 
+				{
 					clearDeviceBuffer(s_commandSocket);
 				}
 
-				if (errorCode == WSAETIMEDOUT) {
+				if (errorCode == WSAETIMEDOUT) 
+				{
 					handleTimeout();
 					return "";
 				}
-				else {
+				else 
+				{
 					//else error is not cause from a timeout
 					handleError("Error receiving a response from the scanner!");
 					return "";
@@ -1257,11 +951,13 @@ std::string SR2000DEV::socketCommunication() {
 			receivedData.assign(responseBuffer, bytesRead);
 
 			//if an error is received, keep reading from the buffer until it is empty
-			if (receivedData.compare("ERROR") == 0) {
+			if (receivedData.compare("ERROR") == 0) 
+			{
 				clearDeviceBuffer(s_commandSocket);
 			}
 
-			if (!receivedData.empty() && !std::all_of(receivedData.begin(), receivedData.end(), ::isspace)) {
+			if (!receivedData.empty() && !std::all_of(receivedData.begin(), receivedData.end(), ::isspace)) 
+			{
 				break;	//Non-empty response received, break the loop and handle data
 			}
 		}
@@ -1270,7 +966,8 @@ std::string SR2000DEV::socketCommunication() {
 }
 
 
-void SR2000DEV::clearDeviceBuffer(SOCKET s) {
+void SR2000DEV::clearDeviceBuffer(SOCKET s) 
+{
 	char tempBuffer[1024]; // Temporary buffer
 	std::string tempData;
 	int recvSize;
@@ -1282,31 +979,38 @@ void SR2000DEV::clearDeviceBuffer(SOCKET s) {
 	tv.tv_usec = 0; // Not setting microseconds
 
 	// Set the receive timeout on the socket
-	if (setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv)) < 0) {
+	if (setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv)) < 0) 
+	{
 		perror("setsockopt failed");
 		return;
 	}
 
-	while (true) {
+	while (true) 
+	{
 		recvSize = recv(s, tempBuffer, sizeof(tempBuffer)-1, 0);
 
-		if (recvSize > 0) {
+		if (recvSize > 0) 
+		{
 			tempBuffer[recvSize] = '\0'; // Null-terminate the received data
 			tempData.assign(tempBuffer, recvSize);
 
-			if (tempData.compare("ERROR") == 0 || tempData.compare("ER") == 0 || !(tempData.empty())) {
+			if (tempData.compare("ERROR") == 0 || tempData.compare("ER") == 0 || !(tempData.empty())) 
+			{
 				// Conditions to continue clearing the buffer
 				continue;
 			}
-			else {
+			else 
+			{
 				break; // Exit loop if the buffer is clear or received data doesn't match conditions
 			}
 		}
-		else if (recvSize == 0) {
+		else if (recvSize == 0) 
+		{
 			// Connection has been gracefully closed
 			break;
 		}
-		else {
+		else 
+		{
 			//// recvSize < 0, an error occurred or the call timed out
 			//int error = WSAGetLastError();
 			//if (error == WSAETIMEDOUT) {
@@ -1324,7 +1028,6 @@ void SR2000DEV::clearDeviceBuffer(SOCKET s) {
 void SR2000DEV::handleTimeout() {
 	SrClientSocket_Loff();
 	showMessageBox("Timeout waiting for response"); // Refactored message box displaying into a function
-	//Notify(VISN_ERROR);
 }
 
 
@@ -1332,7 +1035,6 @@ void SR2000DEV::handleError(const char* message) {
 	SrClientSocket_Loff();
 	showMessageBox(message);
 	DevInfo.ErrorText = message;
-	//Notify(VISN_ERROR);
 }
 
 

@@ -160,7 +160,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="CamCal.h" />
     <ClInclude Include="conversions.h" />
     <ClInclude Include="dirent.h" />
     <ClInclude Include="resource.h" />
@@ -172,7 +171,6 @@
     <ClInclude Include="xvmath.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CamCal.cpp" />
     <ClCompile Include="conversions.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>

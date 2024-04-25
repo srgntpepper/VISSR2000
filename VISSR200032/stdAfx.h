@@ -80,7 +80,6 @@
 #include <vis32/VIS32.H>
 
 #include "xvmath.h"
-#include "CamCal.h"
 #include "conversions.h"
 #include "visconfig.h"
 #include "SR2000Dev.h"
